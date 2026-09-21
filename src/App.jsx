@@ -48,7 +48,15 @@ function Contenu() {
   return (
     <div className="app-shell">
       <header className="entete">
-        <span className="entete-titre">Église — Espace de gestion</span>
+        <div className="entete-logo">
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="13" y="1" width="6" height="6" rx="1" fill="white" opacity="0.9"/>
+            <polygon points="4,14 16,4 28,14" fill="white" opacity="0.95"/>
+            <rect x="5" y="13" width="22" height="16" rx="1" fill="white" opacity="0.85"/>
+            <rect x="13" y="19" width="6" height="10" fill="#1A6BAF"/>
+          </svg>
+          Église 7
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <NotificationsBell role={profil.role} brancheId={profil.brancheId} />
           <button className="bouton-lien" onClick={deconnexion}>Déconnexion</button>

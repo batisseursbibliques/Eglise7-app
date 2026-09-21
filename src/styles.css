@@ -1,14 +1,14 @@
 :root {
-  --encre: #1B2A22;
-  --encre-claire: #33473B;
-  --papier: #F7F4EC;
+  --encre: #1A6BAF;
+  --encre-claire: #2980C8;
+  --papier: #F0F6FF;
   --papier-carte: #FFFFFF;
   --ocre: #C98A2C;
   --ocre-sombre: #A66F1F;
-  --sauge: #6E8B74;
-  --texte: #232323;
-  --texte-doux: #5B5B54;
-  --ligne: #E4DFD1;
+  --sauge: #2E8B57;
+  --texte: #1A2535;
+  --texte-doux: #4A6080;
+  --ligne: #C8DCF0;
   --erreur: #A6402D;
 }
 
@@ -69,7 +69,7 @@ h1, h2, h3 {
   color: var(--texte);
 }
 .champ-saisie:focus {
-  outline: 2px solid var(--ocre);
+  outline: 2px solid var(--encre-claire);
   outline-offset: 1px;
 }
 
@@ -117,24 +117,60 @@ h1, h2, h3 {
 .entete {
   background: var(--encre);
   color: #fff;
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
 }
-.entete-titre { font-family: 'Fraunces', serif; font-size: 1.1rem; }
+.entete-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.entete-logo svg {
+  flex-shrink: 0;
+}
 .entete .bouton-lien { color: #fff; }
 
-.contenu { flex: 1; padding: 2rem 1.5rem; max-width: 1000px; width: 100%; margin: 0 auto; }
+.contenu { flex: 1; padding: 1.5rem 1rem; max-width: 1000px; width: 100%; margin: 0 auto; }
 
-.titre-page { font-size: 1.6rem; margin-bottom: 1.5rem; }
+.titre-page { font-size: 1.5rem; margin-bottom: 1.25rem; }
 
-.onglets { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--ligne); }
-.onglet {
-  background: none; border: none; padding: 0.6rem 1rem; font-size: 0.95rem;
-  color: var(--texte-doux); cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit;
+/* Onglets défilables horizontalement sur mobile */
+.onglets {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--ligne);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
-.onglet.actif { color: var(--encre); border-bottom-color: var(--ocre); font-weight: 600; }
+.onglets::-webkit-scrollbar { display: none; }
+
+.onglet {
+  background: none;
+  border: none;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.92rem;
+  color: var(--texte-doux);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-bottom: -2px;
+}
+.onglet.actif {
+  color: var(--encre);
+  border-bottom-color: var(--ocre);
+  font-weight: 600;
+}
 
 .grille-deux {
   display: grid;

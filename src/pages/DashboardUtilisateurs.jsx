@@ -127,9 +127,9 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
         )}
 
         {dernierUid && (
-          <div className="carte" style={{ marginTop: '1rem', background: '#F7F4EC' }}>
+          <div className="carte" style={{ marginTop: '1rem', background: '#F0F6FF' }}>
             <p className="note" style={{ marginBottom: '0.5rem' }}>
-              À transmettre à Claude pour activer l'accès (ajout dans firestore.rules) :
+              Informations à transmettre pour l'activation de l'accès :
             </p>
             <p className="etiquette" style={{ display: 'block', wordBreak: 'break-all' }}>
               uid : {dernierUid.uid}<br />
@@ -154,8 +154,8 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
         </ul>
         <p className="note" style={{ marginTop: '1rem' }}>
           Un compte créé ici peut se connecter tout de suite avec son e-mail et son mot de
-          passe, mais n'aura accès à aucune donnée tant que Claude n'a pas ajouté son uid
-          dans <code>firestore.rules</code> et redéployé.
+          passe. L'accès aux données sera activé après la mise à jour des règles de sécurité
+          (opération technique réalisée par le gestionnaire de l'application).
         </p>
       </section>
     </div>
