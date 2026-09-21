@@ -1,0 +1,114 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Liste statique des utilisateurs (à compléter à chaque nouveau compte) ──
+    // NE PAS utiliser get()/exists() ici (bug rencontré sur le projet ABBA).
+    function roleDeUid(uid) {
+      return {
+        // "UID_EXEMPLE": "national",
+      }[uid];
+    }
+
+    function brancheDeUid(uid) {
+      return {
+        // "UID_EXEMPLE": "BRANCHE_ID_EXEMPLE",
+      }[uid];
+    }
+
+    function estNational() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'national';
+    }
+
+    function estPasteurDe(brancheId) {
+      return request.auth != null
+        && roleDeUid(request.auth.uid) == 'pasteur'
+        && brancheDeUid(request.auth.uid) == brancheId;
+    }
+
+    function estDeptDe(brancheId) {
+      return request.auth != null
+        && roleDeUid(request.auth.uid) == 'departement'
+        && brancheDeUid(request.auth.uid) == brancheId;
+    }
+
+    function estResponsableBranche(brancheId) {
+      return estNational() || estPasteurDe(brancheId);
+    }
+
+    // Chaque utilisateur lit son propre profil ; national et pasteurs lisent ceux de leur périmètre
+    match /utilisateurs/{uid} {
+      allow read: if request.auth != null
+        && (request.auth.uid == uid
+            || estNational()
+            || (roleDeUid(request.auth.uid) == 'pasteur' && resource.data.brancheId == brancheDeUid(request.auth.uid)));
+
+      // Création possible depuis l'app (voir module Utilisateurs) : le national peut créer
+      // n'importe quel profil ; un pasteur ne peut créer qu'un profil "departement" pour SA branche.
+      allow create: if estNational()
+        || (roleDeUid(request.auth.uid) == 'pasteur'
+            && request.resource.data.role == 'departement'
+            && request.resource.data.brancheId == brancheDeUid(request.auth.uid));
+
+      // ⚠️ Le rôle/branche effectifs pour l'USAGE de l'app restent définis par roleDeUid()/
+      // brancheDeUid() ci-dessus, pas par ce document seul : après création, il faut toujours
+      // demander à Claude d'ajouter le nouvel uid ici et de redéployer les règles.
+      allow update, delete: if false;
+    }
+
+    match /branches/{brancheId} {
+      allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+      allow write: if estNational();
+
+      match /membres/{membreId} {
+        allow read, write: if estResponsableBranche(brancheId);
+
+        match /suivi/{suiviId} {
+          allow read, write: if estResponsableBranche(brancheId);
+        }
+      }
+
+      match /departements/{deptId} {
+        allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+        allow write: if estNational() || estPasteurDe(brancheId);
+
+        match /comptesRendus/{crId} {
+          allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+          allow create: if estDeptDe(brancheId) || estResponsableBranche(brancheId);
+          allow update, delete: if estResponsableBranche(brancheId);
+        }
+      }
+
+      match /caisse/{mouvementId} {
+        allow read, write: if estResponsableBranche(brancheId);
+      }
+
+      match /cultes/{culteId} {
+        allow read, write: if estResponsableBranche(brancheId);
+      }
+
+      match /annonces/{annonceId} {
+        allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+        allow write: if estResponsableBranche(brancheId);
+      }
+
+      match /evenements/{evenementId} {
+        allow read, write: if estResponsableBranche(brancheId);
+      }
+
+      match /virements/{virementId} {
+        allow read: if estResponsableBranche(brancheId);
+        allow create: if estPasteurDe(brancheId);
+        allow update: if estNational(); // vérification + validation par le national
+        allow delete: if false;
+      }
+    }
+
+    // Annonces diffusées par le national à tout le mouvement (toutes branches confondues)
+    match /annoncesNationales/{annonceId} {
+      allow read: if request.auth != null;
+      allow write: if estNational();
+    }
+  }
+}

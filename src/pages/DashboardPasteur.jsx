@@ -1,0 +1,296 @@
+import React, { useEffect, useState } from 'react'
+import {
+  collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp,
+} from 'firebase/firestore'
+import { db } from '../lib/firebase.js'
+import DashboardCultes from './DashboardCultes.jsx'
+import SuiviMembre from './SuiviMembre.jsx'
+import DashboardCommunication from './DashboardCommunication.jsx'
+import DashboardDepartements from './DashboardDepartements.jsx'
+import DashboardEvenements from './DashboardEvenements.jsx'
+import DashboardRapports from './DashboardRapports.jsx'
+import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
+import DashboardApparence from './DashboardApparence.jsx'
+
+const TYPES_MOUVEMENT = [
+  { valeur: 'dime', label: 'Dîme' },
+  { valeur: 'collecte', label: 'Collecte' },
+  { valeur: 'don', label: 'Don' },
+  { valeur: 'depense', label: 'Dépense' },
+]
+
+export default function DashboardPasteur({ profil }) {
+  const brancheId = profil.brancheId
+  const [onglet, setOnglet] = useState('caisse')
+  const [branche, setBranche] = useState(null)
+  const [mouvements, setMouvements] = useState([])
+  const [membres, setMembres] = useState([])
+
+  useEffect(() => {
+    getDoc(doc(db, 'branches', brancheId)).then((snap) => {
+      if (snap.exists()) setBranche(snap.data())
+    })
+  }, [brancheId])
+
+  useEffect(() => {
+    const q = query(collection(db, 'branches', brancheId, 'caisse'), orderBy('date', 'desc'))
+    return onSnapshot(q, (snap) => setMouvements(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  }, [brancheId])
+
+  useEffect(() => {
+    const q = query(collection(db, 'branches', brancheId, 'membres'), orderBy('nom'))
+    return onSnapshot(q, (snap) => setMembres(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  }, [brancheId])
+
+  const solde = mouvements.reduce((acc, m) => {
+    return m.type === 'depense' ? acc - m.montant : acc + m.montant
+  }, 0)
+
+  const seuil = branche?.seuilSolde ?? null
+  const depasseSeuil = seuil != null && solde > seuil
+
+  return (
+    <div>
+      <h1 className="titre-page">{branche?.nom ?? 'Ma branche'}</h1>
+
+      <nav className="onglets">
+        <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
+        <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres</button>
+        <button className={onglet === 'cultes' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('cultes')}>Cultes</button>
+        <button className={onglet === 'departements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('departements')}>Départements</button>
+        <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
+        <button className={onglet === 'evenements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('evenements')}>Événements</button>
+        <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
+        <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
+        <button className={onglet === 'apparence' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('apparence')}>Apparence</button>
+      </nav>
+
+      {onglet === 'caisse' && (
+        <CaissePasteur
+          brancheId={brancheId}
+          mouvements={mouvements}
+          solde={solde}
+          seuil={seuil}
+          depasseSeuil={depasseSeuil}
+          uid={profil.uid}
+        />
+      )}
+
+      {onglet === 'membres' && (
+        <MembresPasteur brancheId={brancheId} membres={membres} uid={profil.uid} />
+      )}
+
+      {onglet === 'cultes' && (
+        <DashboardCultes profil={{ brancheId, uid: profil.uid }} />
+      )}
+
+      {onglet === 'departements' && (
+        <DashboardDepartements brancheId={brancheId} />
+      )}
+
+      {onglet === 'communication' && (
+        <DashboardCommunication brancheId={brancheId} uid={profil.uid} peutPublierBranche={true} />
+      )}
+
+      {onglet === 'evenements' && (
+        <DashboardEvenements brancheId={brancheId} />
+      )}
+
+      {onglet === 'rapports' && (
+        <DashboardRapports brancheId={brancheId} />
+      )}
+
+      {onglet === 'utilisateurs' && (
+        <DashboardUtilisateurs role="pasteur" brancheId={brancheId} />
+      )}
+
+      {onglet === 'apparence' && (
+        <DashboardApparence brancheId={brancheId} branche={branche} />
+      )}
+    </div>
+  )
+}
+
+function CaissePasteur({ brancheId, mouvements, solde, seuil, depasseSeuil, uid }) {
+  const [type, setType] = useState('dime')
+  const [montant, setMontant] = useState('')
+  const [description, setDescription] = useState('')
+
+  const [referenceVirement, setReferenceVirement] = useState('')
+  const [montantVirement, setMontantVirement] = useState('')
+
+  async function ajouterMouvement(e) {
+    e.preventDefault()
+    if (!montant) return
+    await addDoc(collection(db, 'branches', brancheId, 'caisse'), {
+      type,
+      montant: Number(montant),
+      description,
+      date: serverTimestamp(),
+      auteurUid: uid,
+    })
+    setMontant('')
+    setDescription('')
+  }
+
+  async function declarerVirement(e) {
+    e.preventDefault()
+    if (!montantVirement) return
+    await addDoc(collection(db, 'branches', brancheId, 'virements'), {
+      montant: Number(montantVirement),
+      reference: referenceVirement,
+      statut: 'declare',
+      dateDeclaration: serverTimestamp(),
+      declareParUid: uid,
+      valideParUid: null,
+      dateValidation: null,
+    })
+    setMontantVirement('')
+    setReferenceVirement('')
+  }
+
+  return (
+    <div className="grille-deux">
+      <section className="carte">
+        <h2 className="titre-carte">Solde actuel</h2>
+        <p className="grand-nombre">{solde.toLocaleString('fr-FR')} FCFA</p>
+        {seuil != null && (
+          <p className={depasseSeuil ? 'alerte' : 'note'}>
+            Seuil autorisé : {seuil.toLocaleString('fr-FR')} FCFA
+            {depasseSeuil && ' — le seuil est dépassé, un virement vers le national est requis.'}
+          </p>
+        )}
+
+        <h3 className="titre-section">Enregistrer un mouvement</h3>
+        <form onSubmit={ajouterMouvement} className="formulaire">
+          <select value={type} onChange={(e) => setType(e.target.value)} className="champ-saisie">
+            {TYPES_MOUVEMENT.map((t) => (
+              <option key={t.valeur} value={t.valeur}>{t.label}</option>
+            ))}
+          </select>
+          <input
+            type="number"
+            placeholder="Montant (FCFA)"
+            value={montant}
+            onChange={(e) => setMontant(e.target.value)}
+            className="champ-saisie"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Description (optionnel)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="champ-saisie"
+          />
+          <button type="submit" className="bouton-principal">Enregistrer</button>
+        </form>
+
+        <>
+          <h3 className="titre-section">Déclarer un virement au national</h3>
+          {depasseSeuil && (
+            <p className="alerte" style={{ marginBottom: '0.75rem' }}>
+              Le seuil est dépassé — un virement est requis.
+            </p>
+          )}
+          <form onSubmit={declarerVirement} className="formulaire">
+            <input
+              type="number"
+              placeholder="Montant transféré (FCFA)"
+              value={montantVirement}
+              onChange={(e) => setMontantVirement(e.target.value)}
+              className="champ-saisie"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Référence du virement"
+              value={referenceVirement}
+              onChange={(e) => setReferenceVirement(e.target.value)}
+              className="champ-saisie"
+            />
+            <button type="submit" className="bouton-secondaire">Déclarer le virement</button>
+          </form>
+        </>
+      </section>
+
+      <section className="carte">
+        <h2 className="titre-carte">Historique des mouvements</h2>
+        <ul className="liste">
+          {mouvements.map((m) => (
+            <li key={m.id} className="ligne-liste">
+              <span>{TYPES_MOUVEMENT.find((t) => t.valeur === m.type)?.label ?? m.type}</span>
+              <span>{m.description}</span>
+              <span className={m.type === 'depense' ? 'montant-negatif' : 'montant-positif'}>
+                {m.type === 'depense' ? '-' : '+'}{m.montant.toLocaleString('fr-FR')} FCFA
+              </span>
+            </li>
+          ))}
+          {mouvements.length === 0 && <p className="note">Aucun mouvement enregistré pour l'instant.</p>}
+        </ul>
+      </section>
+    </div>
+  )
+}
+
+function MembresPasteur({ brancheId, membres, uid }) {
+  const [nom, setNom] = useState('')
+  const [prenom, setPrenom] = useState('')
+  const [statut, setStatut] = useState('nouveau')
+  const [membreSelectionne, setMembreSelectionne] = useState(null)
+
+  async function ajouterMembre(e) {
+    e.preventDefault()
+    if (!nom) return
+    await addDoc(collection(db, 'branches', brancheId, 'membres'), {
+      nom, prenom, statut, dateAdhesion: serverTimestamp(),
+    })
+    setNom('')
+    setPrenom('')
+    setStatut('nouveau')
+  }
+
+  const membreAffiche = membres.find((m) => m.id === membreSelectionne)
+
+  return (
+    <div className="grille-deux">
+      <section className="carte">
+        <h2 className="titre-carte">Ajouter un membre</h2>
+        <form onSubmit={ajouterMembre} className="formulaire">
+          <input type="text" placeholder="Nom" value={nom} onChange={(e) => setNom(e.target.value)} className="champ-saisie" required />
+          <input type="text" placeholder="Prénom" value={prenom} onChange={(e) => setPrenom(e.target.value)} className="champ-saisie" />
+          <select value={statut} onChange={(e) => setStatut(e.target.value)} className="champ-saisie">
+            <option value="nouveau">Nouveau</option>
+            <option value="regulier">Régulier</option>
+            <option value="membre_officiel">Membre officiel</option>
+          </select>
+          <button type="submit" className="bouton-principal">Ajouter</button>
+        </form>
+
+        <h2 className="titre-carte" style={{ marginTop: '2rem' }}>Registre des membres ({membres.length})</h2>
+        <ul className="liste">
+          {membres.map((m) => (
+            <li key={m.id} className="ligne-liste" style={{ cursor: 'pointer' }} onClick={() => setMembreSelectionne(m.id)}>
+              <span>{m.prenom} {m.nom}</span>
+              <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
+            </li>
+          ))}
+          {membres.length === 0 && <p className="note">Aucun membre enregistré pour l'instant.</p>}
+        </ul>
+      </section>
+
+      <section className="carte">
+        {membreAffiche ? (
+          <SuiviMembre
+            brancheId={brancheId}
+            membre={membreAffiche}
+            uid={uid}
+            onFermer={() => setMembreSelectionne(null)}
+          />
+        ) : (
+          <p className="note">Sélectionne un membre pour voir et mettre à jour son parcours spirituel.</p>
+        )}
+      </section>
+    </div>
+  )
+}
