@@ -3,6 +3,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Table statique des rôles ──────────────────────────────────────────────
+    // On ajoute ici chaque UID après création du compte.
     function roleDeUid(uid) {
       return {
         "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national",
@@ -10,19 +12,45 @@ service cloud.firestore {
       }[uid];
     }
 
+    // Table statique des branches pour pasteurs, secrétaires et trésoriers locaux
     function brancheDeUid(uid) {
       return {
         "wMSZpdOyttbZegS9TtwqlhcLYYA2": "PdgWgoh95wJE1numTva7"
       }[uid];
     }
 
+    // ── Fonctions de rôle ─────────────────────────────────────────────────────
     function estNational() {
       return request.auth != null && roleDeUid(request.auth.uid) == 'national';
+    }
+
+    function estSecretaireGeneral() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'secretaire_general';
+    }
+
+    function estTresorierGeneral() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'tresorier_general';
+    }
+
+    function estBureauNational() {
+      return estNational() || estSecretaireGeneral() || estTresorierGeneral();
     }
 
     function estPasteurDe(brancheId) {
       return request.auth != null
         && roleDeUid(request.auth.uid) == 'pasteur'
+        && brancheDeUid(request.auth.uid) == brancheId;
+    }
+
+    function estSecretaireDe(brancheId) {
+      return request.auth != null
+        && roleDeUid(request.auth.uid) == 'secretaire'
+        && brancheDeUid(request.auth.uid) == brancheId;
+    }
+
+    function estTresorierDe(brancheId) {
+      return request.auth != null
+        && roleDeUid(request.auth.uid) == 'tresorier'
         && brancheDeUid(request.auth.uid) == brancheId;
     }
 
@@ -32,15 +60,33 @@ service cloud.firestore {
         && brancheDeUid(request.auth.uid) == brancheId;
     }
 
+    // Le pasteur supervise tout dans sa branche
     function estResponsableBranche(brancheId) {
       return estNational() || estPasteurDe(brancheId);
     }
 
+    // Peut lire les données financières d'une branche
+    function peutLireFinancesBranche(brancheId) {
+      return estResponsableBranche(brancheId)
+        || estTresorierDe(brancheId)
+        || estTresorierGeneral();
+    }
+
+    // Peut lire les données membres/PV/courrier d'une branche
+    function peutLireSecretariatBranche(brancheId) {
+      return estResponsableBranche(brancheId)
+        || estSecretaireDe(brancheId)
+        || estSecretaireGeneral();
+    }
+
+    // ── Profils utilisateurs ──────────────────────────────────────────────────
     match /utilisateurs/{uid} {
       allow read: if request.auth != null
         && (request.auth.uid == uid
             || estNational()
-            || (roleDeUid(request.auth.uid) == 'pasteur' && resource.data.brancheId == brancheDeUid(request.auth.uid)));
+            || estPasteurDe(resource.data.brancheId)
+            || estSecretaireGeneral()
+            || estTresorierGeneral());
       allow create: if estNational()
         || (roleDeUid(request.auth.uid) == 'pasteur'
             && request.resource.data.role == 'departement'
@@ -48,20 +94,56 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Branches ─────────────────────────────────────────────────────────────
     match /branches/{brancheId} {
-      allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+      allow read: if estResponsableBranche(brancheId)
+        || estDeptDe(brancheId)
+        || estSecretaireDe(brancheId)
+        || estTresorierDe(brancheId)
+        || estBureauNational();
       allow write: if estNational();
 
+      // Membres : secrétaire peut écrire, pasteur et SG lisent
       match /membres/{membreId} {
-        allow read, write: if estResponsableBranche(brancheId);
+        allow read: if peutLireSecretariatBranche(brancheId);
+        allow write: if estResponsableBranche(brancheId) || estSecretaireDe(brancheId);
+
         match /suivi/{suiviId} {
           allow read, write: if estResponsableBranche(brancheId);
         }
       }
 
+      // Procès-verbaux : secrétaire rédige, pasteur et SG lisent
+      match /pv/{pvId} {
+        allow read: if peutLireSecretariatBranche(brancheId);
+        allow write: if estSecretaireDe(brancheId) || estResponsableBranche(brancheId);
+      }
+
+      // Courrier : secrétaire rédige, pasteur et SG lisent
+      match /courrier/{courrierId} {
+        allow read: if peutLireSecretariatBranche(brancheId);
+        allow write: if estSecretaireDe(brancheId) || estResponsableBranche(brancheId);
+      }
+
+      // Caisse : trésorier saisit, pasteur et TG lisent
+      match /caisse/{mouvementId} {
+        allow read: if peutLireFinancesBranche(brancheId);
+        allow write: if estTresorierDe(brancheId) || estResponsableBranche(brancheId);
+      }
+
+      // Virements : trésorier ou pasteur déclare, national ou TG valide
+      match /virements/{virementId} {
+        allow read: if peutLireFinancesBranche(brancheId);
+        allow create: if estPasteurDe(brancheId) || estTresorierDe(brancheId);
+        allow update: if estNational() || estTresorierGeneral();
+        allow delete: if false;
+      }
+
+      // Départements
       match /departements/{deptId} {
         allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
         allow write: if estNational() || estPasteurDe(brancheId);
+
         match /comptesRendus/{crId} {
           allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
           allow create: if estDeptDe(brancheId) || estResponsableBranche(brancheId);
@@ -69,10 +151,7 @@ service cloud.firestore {
         }
       }
 
-      match /caisse/{mouvementId} {
-        allow read, write: if estResponsableBranche(brancheId);
-      }
-
+      // Cultes, annonces, événements
       match /cultes/{culteId} {
         allow read, write: if estResponsableBranche(brancheId);
       }
@@ -85,13 +164,17 @@ service cloud.firestore {
       match /evenements/{evenementId} {
         allow read, write: if estResponsableBranche(brancheId);
       }
+    }
 
-      match /virements/{virementId} {
-        allow read: if estResponsableBranche(brancheId);
-        allow create: if estPasteurDe(brancheId);
-        allow update: if estNational();
-        allow delete: if false;
-      }
+    // ── Collections nationales ────────────────────────────────────────────────
+    match /pvNationaux/{pvId} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estSecretaireGeneral();
+    }
+
+    match /courrierNational/{courrierId} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estSecretaireGeneral();
     }
 
     match /annoncesNationales/{annonceId} {

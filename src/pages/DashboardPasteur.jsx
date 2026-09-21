@@ -11,7 +11,6 @@ import DashboardEvenements from './DashboardEvenements.jsx'
 import DashboardRapports from './DashboardRapports.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 import DashboardApparence from './DashboardApparence.jsx'
-
 const TYPES_MOUVEMENT = [
   { valeur: 'dime', label: 'Dîme' },
   { valeur: 'collecte', label: 'Collecte' },
@@ -61,6 +60,8 @@ export default function DashboardPasteur({ profil }) {
         <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
         <button className={onglet === 'evenements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('evenements')}>Événements</button>
         <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
+        <button className={onglet === 'secretariat' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('secretariat')}>📋 Secrétariat</button>
+        <button className={onglet === 'tresorerie' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('tresorerie')}>💰 Trésorerie</button>
         <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
         <button className={onglet === 'apparence' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('apparence')}>Apparence</button>
       </nav>
@@ -98,6 +99,14 @@ export default function DashboardPasteur({ profil }) {
 
       {onglet === 'rapports' && (
         <DashboardRapports brancheId={brancheId} />
+      )}
+
+      {onglet === 'secretariat' && (
+        <LectureSecretariat brancheId={brancheId} />
+      )}
+
+      {onglet === 'tresorerie' && (
+        <LectureTresorerie brancheId={brancheId} mouvements={mouvements} solde={solde} seuil={seuil} />
       )}
 
       {onglet === 'utilisateurs' && (
@@ -291,6 +300,150 @@ function MembresPasteur({ brancheId, membres, uid }) {
           <p className="note">Sélectionne un membre pour voir et mettre à jour son parcours spirituel.</p>
         )}
       </section>
+    </div>
+  )
+}
+
+// ── Vue lecture seule : travail du secrétaire de branche ─────────────────────
+function LectureSecretariat({ brancheId }) {
+  const [onglet, setOnglet] = useState('membres')
+  const [membres, setMembres] = useState([])
+  const [pvs, setPvs] = useState([])
+  const [courriers, setCourriers] = useState([])
+
+  useEffect(() => {
+    const q = query(collection(db, 'branches', brancheId, 'membres'), orderBy('nom'))
+    return onSnapshot(q, (snap) => setMembres(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  }, [brancheId])
+
+  useEffect(() => {
+    const q = query(collection(db, 'branches', brancheId, 'pv'), orderBy('date', 'desc'))
+    return onSnapshot(q, (snap) => setPvs(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  }, [brancheId])
+
+  useEffect(() => {
+    const q = query(collection(db, 'branches', brancheId, 'courrier'), orderBy('date', 'desc'))
+    return onSnapshot(q, (snap) => setCourriers(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  }, [brancheId])
+
+  return (
+    <div>
+      <div style={{ background: '#EAF3FF', border: '1px solid var(--ligne)', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1rem' }}>
+        <p className="note" style={{ margin: 0 }}>📋 Vue en lecture seule — travail du secrétaire de votre branche.</p>
+      </div>
+      <nav className="onglets">
+        <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres ({membres.length})</button>
+        <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>Procès-verbaux ({pvs.length})</button>
+        <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier ({courriers.length})</button>
+      </nav>
+
+      {onglet === 'membres' && (
+        <section className="carte">
+          <h2 className="titre-carte">Registre des membres ({membres.length})</h2>
+          <ul className="liste">
+            {membres.map((m) => (
+              <li key={m.id} className="ligne-liste">
+                <span>{m.prenom} {m.nom}</span>
+                <span>{m.telephone || '—'}</span>
+                <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
+              </li>
+            ))}
+            {membres.length === 0 && <p className="note">Aucun membre enregistré par le secrétaire.</p>}
+          </ul>
+        </section>
+      )}
+
+      {onglet === 'pv' && (
+        <section className="carte">
+          <h2 className="titre-carte">Procès-verbaux ({pvs.length})</h2>
+          <ul className="liste">
+            {pvs.map((p) => (
+              <li key={p.id} className="ligne-liste-verticale">
+                <strong>{p.date ? new Date(p.date + 'T00:00').toLocaleDateString('fr-FR') : '—'}</strong> — {p.objet}
+                {p.contenu && <p className="note" style={{ marginTop: '0.25rem' }}>{p.contenu.slice(0, 200)}{p.contenu.length > 200 ? '…' : ''}</p>}
+              </li>
+            ))}
+            {pvs.length === 0 && <p className="note">Aucun PV enregistré par le secrétaire.</p>}
+          </ul>
+        </section>
+      )}
+
+      {onglet === 'courrier' && (
+        <section className="carte">
+          <h2 className="titre-carte">Registre des courriers ({courriers.length})</h2>
+          <ul className="liste">
+            {courriers.map((c) => (
+              <li key={c.id} className="ligne-liste">
+                <span className="etiquette">{c.sens === 'entrant' ? '↓ Entrant' : '↑ Sortant'}</span>
+                <span>{c.date ? new Date(c.date + 'T00:00').toLocaleDateString('fr-FR') : '—'}</span>
+                <span>{c.expediteur}</span>
+                <span>{c.objet}</span>
+              </li>
+            ))}
+            {courriers.length === 0 && <p className="note">Aucun courrier enregistré par le secrétaire.</p>}
+          </ul>
+        </section>
+      )}
+    </div>
+  )
+}
+
+// ── Vue lecture seule : travail du trésorier de branche ──────────────────────
+function LectureTresorerie({ brancheId, mouvements, solde, seuil }) {
+  const depasseSeuil = seuil != null && solde > seuil
+  const TYPES = [
+    { valeur: 'dime', label: 'Dîme' },
+    { valeur: 'collecte', label: 'Collecte' },
+    { valeur: 'don', label: 'Don' },
+    { valeur: 'depense', label: 'Dépense' },
+  ]
+
+  return (
+    <div>
+      <div style={{ background: '#EAF3FF', border: '1px solid var(--ligne)', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1rem' }}>
+        <p className="note" style={{ margin: 0 }}>💰 Vue en lecture seule — travail du trésorier de votre branche.</p>
+      </div>
+      <div className="grille-deux">
+        <section className="carte">
+          <h2 className="titre-carte">Solde actuel</h2>
+          <p className="grand-nombre">{solde.toLocaleString('fr-FR')} FCFA</p>
+          {seuil != null && (
+            <p className={depasseSeuil ? 'alerte' : 'note'}>
+              Seuil autorisé : {seuil.toLocaleString('fr-FR')} FCFA
+              {depasseSeuil && ' — seuil dépassé.'}
+            </p>
+          )}
+          <h3 className="titre-section">Résumé par type</h3>
+          <ul className="liste">
+            {TYPES.map(({ valeur, label }) => {
+              const total = mouvements.filter((m) => m.type === valeur).reduce((s, m) => s + m.montant, 0)
+              return (
+                <li key={valeur} className="ligne-liste">
+                  <span>{label}</span>
+                  <span className={valeur === 'depense' ? 'montant-negatif' : 'montant-positif'}>
+                    {total.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+        <section className="carte">
+          <h2 className="titre-carte">Derniers mouvements</h2>
+          <ul className="liste">
+            {mouvements.slice(0, 20).map((m) => (
+              <li key={m.id} className="ligne-liste">
+                <span>{TYPES.find((t) => t.valeur === m.type)?.label ?? m.type}</span>
+                <span>{m.description}</span>
+                <span className={m.type === 'depense' ? 'montant-negatif' : 'montant-positif'}>
+                  {m.type === 'depense' ? '-' : '+'}{m.montant.toLocaleString('fr-FR')} FCFA
+                </span>
+              </li>
+            ))}
+            {mouvements.length === 0 && <p className="note">Aucun mouvement enregistré.</p>}
+          </ul>
+        </section>
+      </div>
     </div>
   )
 }

@@ -90,11 +90,18 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
           {role === 'national' && (
             <>
               <select value={roleCree} onChange={(e) => setRoleCree(e.target.value)} className="champ-saisie">
-                <option value="pasteur">Pasteur de branche</option>
-                <option value="national">Membre du bureau national</option>
+                <optgroup label="Bureau national">
+                  <option value="secretaire_general">Secrétaire Général</option>
+                  <option value="tresorier_general">Trésorier Général</option>
+                </optgroup>
+                <optgroup label="Branche locale">
+                  <option value="pasteur">Pasteur de branche</option>
+                  <option value="secretaire">Secrétaire de branche</option>
+                  <option value="tresorier">Trésorier de branche</option>
+                </optgroup>
               </select>
-              {roleCree === 'pasteur' && (
-                <select value={brancheCible} onChange={(e) => setBrancheCible(e.target.value)} className="champ-saisie" required>
+              {['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && (
+                <select value={brancheCible} onChange={(e) => setBrancheCible(e.target.value)} className="champ-saisie">
                   <option value="">— Choisir la branche —</option>
                   {branches.map((b) => <option key={b.id} value={b.id}>{b.nom}</option>)}
                 </select>
@@ -114,7 +121,7 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
             className="bouton-principal"
             disabled={
               enCours
-              || (role === 'national' && roleCree === 'pasteur' && !brancheCible)
+              || (role === 'national' && ['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && !brancheCible)
               || (role === 'pasteur' && !departementCible)
             }
           >
