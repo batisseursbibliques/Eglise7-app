@@ -3,17 +3,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Liste statique des utilisateurs (à compléter à chaque nouveau compte) ──
-    // NE PAS utiliser get()/exists() ici (bug rencontré sur le projet ABBA).
+    // ── Liste statique des utilisateurs ──────────────────────────────────────
+    // Pattern fiable : pas de get()/exists() dans les règles (trop lent et
+    // source de bugs). On ajoute chaque UID ici après création du compte.
     function roleDeUid(uid) {
       return {
-        // "UID_EXEMPLE": "national",
+        "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national"
       }[uid];
     }
 
     function brancheDeUid(uid) {
       return {
-        // "UID_EXEMPLE": "BRANCHE_ID_EXEMPLE",
+        // Pasteurs et responsables de département ajoutés ici à chaque nouveau compte
       }[uid];
     }
 
@@ -44,16 +45,11 @@ service cloud.firestore {
             || estNational()
             || (roleDeUid(request.auth.uid) == 'pasteur' && resource.data.brancheId == brancheDeUid(request.auth.uid)));
 
-      // Création possible depuis l'app (voir module Utilisateurs) : le national peut créer
-      // n'importe quel profil ; un pasteur ne peut créer qu'un profil "departement" pour SA branche.
       allow create: if estNational()
         || (roleDeUid(request.auth.uid) == 'pasteur'
             && request.resource.data.role == 'departement'
             && request.resource.data.brancheId == brancheDeUid(request.auth.uid));
 
-      // ⚠️ Le rôle/branche effectifs pour l'USAGE de l'app restent définis par roleDeUid()/
-      // brancheDeUid() ci-dessus, pas par ce document seul : après création, il faut toujours
-      // demander à Claude d'ajouter le nouvel uid ici et de redéployer les règles.
       allow update, delete: if false;
     }
 
@@ -100,12 +96,11 @@ service cloud.firestore {
       match /virements/{virementId} {
         allow read: if estResponsableBranche(brancheId);
         allow create: if estPasteurDe(brancheId);
-        allow update: if estNational(); // vérification + validation par le national
+        allow update: if estNational();
         allow delete: if false;
       }
     }
 
-    // Annonces diffusées par le national à tout le mouvement (toutes branches confondues)
     match /annoncesNationales/{annonceId} {
       allow read: if request.auth != null;
       allow write: if estNational();
