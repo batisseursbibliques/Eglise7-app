@@ -3,18 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Liste statique des utilisateurs ──────────────────────────────────────
-    // Pattern fiable : pas de get()/exists() dans les règles (trop lent et
-    // source de bugs). On ajoute chaque UID ici après création du compte.
     function roleDeUid(uid) {
       return {
-        "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national"
+        "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national",
+        "wMSZpdOyttbZegS9TtwqlhcLYYA2": "pasteur"
       }[uid];
     }
 
     function brancheDeUid(uid) {
       return {
-        // Pasteurs et responsables de département ajoutés ici à chaque nouveau compte
+        "wMSZpdOyttbZegS9TtwqlhcLYYA2": "PdgWgoh95wJE1numTva7"
       }[uid];
     }
 
@@ -38,18 +36,15 @@ service cloud.firestore {
       return estNational() || estPasteurDe(brancheId);
     }
 
-    // Chaque utilisateur lit son propre profil ; national et pasteurs lisent ceux de leur périmètre
     match /utilisateurs/{uid} {
       allow read: if request.auth != null
         && (request.auth.uid == uid
             || estNational()
             || (roleDeUid(request.auth.uid) == 'pasteur' && resource.data.brancheId == brancheDeUid(request.auth.uid)));
-
       allow create: if estNational()
         || (roleDeUid(request.auth.uid) == 'pasteur'
             && request.resource.data.role == 'departement'
             && request.resource.data.brancheId == brancheDeUid(request.auth.uid));
-
       allow update, delete: if false;
     }
 
@@ -59,7 +54,6 @@ service cloud.firestore {
 
       match /membres/{membreId} {
         allow read, write: if estResponsableBranche(brancheId);
-
         match /suivi/{suiviId} {
           allow read, write: if estResponsableBranche(brancheId);
         }
@@ -68,7 +62,6 @@ service cloud.firestore {
       match /departements/{deptId} {
         allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
         allow write: if estNational() || estPasteurDe(brancheId);
-
         match /comptesRendus/{crId} {
           allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
           allow create: if estDeptDe(brancheId) || estResponsableBranche(brancheId);
