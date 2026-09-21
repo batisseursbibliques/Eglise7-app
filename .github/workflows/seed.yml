@@ -1,0 +1,36 @@
+name: Seed — Profil national
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Créer le profil national
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          npm install firebase-admin --save-dev
+          node --input-type=module << 'JSEOF'
+          import { initializeApp, cert } from 'firebase-admin/app'
+          import { getFirestore } from 'firebase-admin/firestore'
+          const sa = JSON.parse(process.env.FIREBASE_SA)
+          initializeApp({ credential: cert(sa) })
+          const db = getFirestore()
+          await db.collection('utilisateurs').doc('BHxWbDUWzENR32EGkZyhCIrWvsw1').set({
+            nom: 'Apôtre Paul HOUEKIN',
+            role: 'national',
+            brancheId: null,
+            departementId: null,
+          })
+          console.log('Profil national créé')
+          process.exit(0)
+          JSEOF
