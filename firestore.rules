@@ -151,6 +151,17 @@ service cloud.firestore {
         }
       }
 
+      // Projets de branche : trésorier gère, pasteur et TG lisent
+      match /projets/{projetId} {
+        allow read: if peutLireFinancesBranche(brancheId) || estResponsableBranche(brancheId);
+        allow write: if estTresorierDe(brancheId) || estResponsableBranche(brancheId) || estTresorierGeneral();
+
+        match /contributions/{contribId} {
+          allow read: if peutLireFinancesBranche(brancheId) || estResponsableBranche(brancheId);
+          allow write: if estTresorierDe(brancheId) || estResponsableBranche(brancheId);
+        }
+      }
+
       // Cultes, annonces, événements
       match /cultes/{culteId} {
         allow read, write: if estResponsableBranche(brancheId);
@@ -180,6 +191,17 @@ service cloud.firestore {
     match /annoncesNationales/{annonceId} {
       allow read: if request.auth != null;
       allow write: if estNational();
+    }
+
+    // ── Projets nationaux ─────────────────────────────────────────────────────
+    match /projetsNationaux/{projetId} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estTresorierGeneral();
+
+      match /contributions/{contribId} {
+        allow read: if estBureauNational();
+        allow write: if estNational() || estTresorierGeneral();
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import DashboardEvenements from './DashboardEvenements.jsx'
 import DashboardRapports from './DashboardRapports.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 import DashboardApparence from './DashboardApparence.jsx'
+import GestionProjets from './GestionProjets.jsx'
 const TYPES_MOUVEMENT = [
   { valeur: 'dime', label: 'Dîme' },
   { valeur: 'collecte', label: 'Collecte' },
@@ -62,6 +63,7 @@ export default function DashboardPasteur({ profil }) {
         <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
         <button className={onglet === 'secretariat' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('secretariat')}>📋 Secrétariat</button>
         <button className={onglet === 'tresorerie' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('tresorerie')}>💰 Trésorerie</button>
+        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>📦 Projets</button>
         <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
         <button className={onglet === 'apparence' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('apparence')}>Apparence</button>
       </nav>
@@ -107,6 +109,10 @@ export default function DashboardPasteur({ profil }) {
 
       {onglet === 'tresorerie' && (
         <LectureTresorerie brancheId={brancheId} mouvements={mouvements} solde={solde} seuil={seuil} />
+      )}
+
+      {onglet === 'projets' && (
+        <GestionProjets brancheId={brancheId} uid={profil.uid} lectureSeule={true} />
       )}
 
       {onglet === 'utilisateurs' && (

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import DashboardCommunication from './DashboardCommunication.jsx'
 import DashboardBranches from './DashboardBranches.jsx'
 import DashboardRapports from './DashboardRapports.jsx'
+import GestionProjets from './GestionProjets.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
 export default function DashboardNational() {
@@ -49,6 +50,7 @@ export default function DashboardNational() {
         <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
         <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
         <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
+        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>📦 Projets</button>
       </nav>
 
       {onglet === 'vue' && (
@@ -99,6 +101,56 @@ export default function DashboardNational() {
 
       {onglet === 'communication' && (
         <DashboardCommunication uid={user.uid} peutPublierNational={true} />
+      )}
+
+      {onglet === 'projets' && (
+        <VueProjetsNational />
+      )}
+    </div>
+  )
+}
+
+function VueProjetsNational() {
+  const [vue, setVue] = useState('national')
+  const [branches, setBranches] = useState([])
+  const [brancheSelectionnee, setBrancheSelectionnee] = useState(null)
+  const { user } = useAuth()
+
+  useEffect(() => onSnapshot(collection(db, 'branches'), (snap) => {
+    const b = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    setBranches(b)
+    if (b.length > 0 && !brancheSelectionnee) setBrancheSelectionnee(b[0].id)
+  }), [])
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <button className={vue === 'national' ? 'bouton-principal' : 'bouton-secondaire'} onClick={() => setVue('national')}>
+          Projets nationaux
+        </button>
+        <button className={vue === 'branches' ? 'bouton-principal' : 'bouton-secondaire'} onClick={() => setVue('branches')}>
+          Projets des branches
+        </button>
+      </div>
+
+      {vue === 'national' && (
+        <GestionProjets brancheId={null} uid={user?.uid} lectureSeule={true} />
+      )}
+
+      {vue === 'branches' && (
+        <div>
+          <select
+            value={brancheSelectionnee || ''}
+            onChange={(e) => setBrancheSelectionnee(e.target.value)}
+            className="champ-saisie"
+            style={{ maxWidth: '300px', marginBottom: '1rem' }}
+          >
+            {branches.map((b) => <option key={b.id} value={b.id}>{b.nom}</option>)}
+          </select>
+          {brancheSelectionnee && (
+            <GestionProjets brancheId={brancheSelectionnee} uid={null} lectureSeule={true} />
+          )}
+        </div>
       )}
     </div>
   )

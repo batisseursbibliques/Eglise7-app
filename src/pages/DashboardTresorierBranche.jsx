@@ -9,6 +9,8 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
+import GestionProjets from './GestionProjets.jsx'
+
 export default function DashboardTresorierBranche({ profil }) {
   const { brancheId, uid } = profil
   const [onglet, setOnglet] = useState('caisse')
@@ -47,6 +49,7 @@ export default function DashboardTresorierBranche({ profil }) {
       <nav className="onglets">
         <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
         <button className={onglet === 'rapport' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapport')}>Rapport financier</button>
+        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>Projets</button>
       </nav>
 
       {onglet === 'caisse' && (
@@ -126,6 +129,9 @@ export default function DashboardTresorierBranche({ profil }) {
             )}
           </section>
         </div>
+      )}
+      {onglet === 'projets' && (
+        <GestionProjets brancheId={brancheId} uid={uid} />
       )}
     </div>
   )

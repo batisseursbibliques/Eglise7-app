@@ -3,6 +3,8 @@ import { collection, onSnapshot, query, where, collectionGroup, orderBy, doc, up
 import { db } from '../lib/firebase.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
+import GestionProjets from './GestionProjets.jsx'
+
 const TYPES_MOUVEMENT = [
   { valeur: 'dime', label: 'Dîme' },
   { valeur: 'collecte', label: 'Collecte' },
@@ -21,10 +23,16 @@ export default function DashboardTresorierGeneral({ profil }) {
         <button className={onglet === 'virements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('virements')}>Virements</button>
         <button className={onglet === 'consolidation' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('consolidation')}>Consolidation</button>
         <button className={onglet === 'branches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('branches')}>Caisses des branches</button>
+        <button className={onglet === 'projetsNationaux' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsNationaux')}>Projets nationaux</button>
+        <button className={onglet === 'projetsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsBranches')}>Projets des branches</button>
       </nav>
       {onglet === 'virements' && <GestionVirements uid={user?.uid} />}
       {onglet === 'consolidation' && <ConsolidationFinanciere />}
       {onglet === 'branches' && <CaissesBranches />}
+      {onglet === 'projetsNationaux' && (
+        <GestionProjets brancheId={null} uid={user?.uid} />
+      )}
+      {onglet === 'projetsBranches' && <ProjetsBranches />}
     </div>
   )
 }
@@ -202,6 +210,36 @@ function CaissesBranches() {
           </ul>
         </section>
       </div>
+    </div>
+  )
+}
+
+// Vue consolidée des projets de toutes les branches (lecture seule pour le TG)
+function ProjetsBranches() {
+  const [branches, setBranches] = useState([])
+  const [brancheSelectionnee, setBrancheSelectionnee] = useState(null)
+
+  useEffect(() => onSnapshot(collection(db, 'branches'), (snap) => {
+    const b = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    setBranches(b)
+    if (b.length > 0 && !brancheSelectionnee) setBrancheSelectionnee(b[0].id)
+  }), [])
+
+  return (
+    <div>
+      <div style={{ marginBottom: '1rem' }}>
+        <select
+          value={brancheSelectionnee || ''}
+          onChange={(e) => setBrancheSelectionnee(e.target.value)}
+          className="champ-saisie"
+          style={{ maxWidth: '300px' }}
+        >
+          {branches.map((b) => <option key={b.id} value={b.id}>{b.nom}</option>)}
+        </select>
+      </div>
+      {brancheSelectionnee && (
+        <GestionProjets brancheId={brancheSelectionnee} uid={null} lectureSeule={true} />
+      )}
     </div>
   )
 }
