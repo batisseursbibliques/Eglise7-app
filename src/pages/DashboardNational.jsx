@@ -8,6 +8,7 @@ import DashboardCommunication from './DashboardCommunication.jsx'
 import DashboardBranches from './DashboardBranches.jsx'
 import DashboardRapports from './DashboardRapports.jsx'
 import GestionProjets from './GestionProjets.jsx'
+import VueMessagesPresident from './VueMessagesPresident.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
 export default function DashboardNational() {
@@ -51,6 +52,7 @@ export default function DashboardNational() {
         <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
         <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
         <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>📦 Projets</button>
+        <button className={onglet === 'messages' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('messages')}>✍️ Messages</button>
       </nav>
 
       {onglet === 'vue' && (
@@ -102,6 +104,8 @@ export default function DashboardNational() {
       {onglet === 'communication' && (
         <DashboardCommunication uid={user.uid} peutPublierNational={true} />
       )}
+
+      {onglet === 'messages' && <VueMessagesPresident />}
 
       {onglet === 'projets' && (
         <VueProjetsNational />

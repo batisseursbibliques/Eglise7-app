@@ -32,8 +32,12 @@ service cloud.firestore {
       return request.auth != null && roleDeUid(request.auth.uid) == 'tresorier_general';
     }
 
+    function estAdmin() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'admin';
+    }
+
     function estBureauNational() {
-      return estNational() || estSecretaireGeneral() || estTresorierGeneral();
+      return estNational() || estAdmin() || estSecretaireGeneral() || estTresorierGeneral();
     }
 
     function estPasteurDe(brancheId) {
@@ -84,14 +88,22 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (request.auth.uid == uid
             || estNational()
+            || estAdmin()
             || estPasteurDe(resource.data.brancheId)
             || estSecretaireGeneral()
             || estTresorierGeneral());
-      allow create: if estNational()
+      allow create: if estNational() || estAdmin()
         || (roleDeUid(request.auth.uid) == 'pasteur'
             && request.resource.data.role == 'departement'
             && request.resource.data.brancheId == brancheDeUid(request.auth.uid));
-      allow update, delete: if false;
+      allow update: if estAdmin() || estNational();
+      allow delete: if false;
+
+      // Messages du pasteur — privés en brouillon, visibles en "prêt"/"prêché" par le président
+      match /messages/{messageId} {
+        allow read: if request.auth.uid == uid || estNational() || estAdmin();
+        allow write: if request.auth.uid == uid;
+      }
     }
 
     // ── Branches ─────────────────────────────────────────────────────────────

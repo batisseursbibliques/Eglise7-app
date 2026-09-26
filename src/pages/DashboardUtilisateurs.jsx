@@ -12,21 +12,26 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
   const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
-  const [roleCree, setRoleCree] = useState(role === 'national' ? 'pasteur' : 'departement')
+  const [pays, setPays] = useState('')
+  const [roleCree, setRoleCree] = useState(
+    role === 'national' || role === 'admin' ? 'pasteur' : 'departement'
+  )
   const [brancheCible, setBrancheCible] = useState(brancheId || '')
   const [departementCible, setDepartementCible] = useState('')
   const [statutMessage, setStatutMessage] = useState(null)
   const [dernierUid, setDernierUid] = useState(null)
   const [enCours, setEnCours] = useState(false)
 
+  const estGestionnaire = role === 'national' || role === 'admin'
+
   useEffect(() => {
-    const contrainte = role === 'national' ? [] : [where('brancheId', '==', brancheId)]
+    const contrainte = estGestionnaire ? [] : [where('brancheId', '==', brancheId)]
     const q = query(collection(db, 'utilisateurs'), ...contrainte)
     return onSnapshot(q, (snap) => setUtilisateurs(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
   }, [role, brancheId])
 
   useEffect(() => {
-    if (role !== 'national') return
+    if (!estGestionnaire) return
     const q = query(collection(db, 'branches'), orderBy('nom'))
     return onSnapshot(q, (snap) => setBranches(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
   }, [role])
@@ -41,17 +46,20 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
     e.preventDefault()
     setStatutMessage(null)
     setEnCours(true)
-    const brancheFinale = role === 'national' ? brancheCible : brancheId
+    const brancheFinale = estGestionnaire ? brancheCible : brancheId
 
-    // App Firebase secondaire persistante (depuis firebase.js) pour créer le compte
-    // sans déconnecter l'administrateur actuellement connecté.
     const authSecondaire = getAuth(getSecondaryApp())
 
     try {
       const identifiants = await createUserWithEmailAndPassword(authSecondaire, email, motDePasse)
       const nouvelUid = identifiants.user.uid
 
-      const donneesProfil = { nom, role: roleCree, brancheId: brancheFinale || null, departementId: null }
+      const donneesProfil = {
+        nom, role: roleCree,
+        brancheId: brancheFinale || null,
+        departementId: null,
+        pays: pays || null,
+      }
       if (roleCree === 'departement') donneesProfil.departementId = departementCible || null
 
       await setDoc(doc(db, 'utilisateurs', nouvelUid), donneesProfil)
@@ -87,10 +95,15 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
             onChange={(e) => setMotDePasse(e.target.value)} className="champ-saisie" required minLength={6}
           />
 
-          {role === 'national' && (
+          {estGestionnaire && (
             <>
+              <input
+                type="text" placeholder="Pays (ex : Bénin, Côte d'Ivoire…)"
+                value={pays} onChange={(e) => setPays(e.target.value)} className="champ-saisie"
+              />
               <select value={roleCree} onChange={(e) => setRoleCree(e.target.value)} className="champ-saisie">
                 <optgroup label="Bureau national">
+                  <option value="admin">Gestionnaire de comptes (Admin)</option>
                   <option value="secretaire_general">Secrétaire Général</option>
                   <option value="tresorier_general">Trésorier Général</option>
                 </optgroup>
@@ -121,7 +134,7 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
             className="bouton-principal"
             disabled={
               enCours
-              || (role === 'national' && ['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && !brancheCible)
+              || (estGestionnaire && ['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && !brancheCible)
               || (role === 'pasteur' && !departementCible)
             }
           >

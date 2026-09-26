@@ -10,9 +10,10 @@ import DashboardSecretaireBranche from './pages/DashboardSecretaireBranche.jsx'
 import DashboardTresorierBranche from './pages/DashboardTresorierBranche.jsx'
 import DashboardSecretaireGeneral from './pages/DashboardSecretaireGeneral.jsx'
 import DashboardTresorierGeneral from './pages/DashboardTresorierGeneral.jsx'
+import DashboardAdmin from './pages/DashboardAdmin.jsx'
 import NotificationsBell from './pages/NotificationsBell.jsx'
 
-const ROLES_CONNUS = ['national', 'pasteur', 'departement', 'secretaire', 'tresorier', 'secretaire_general', 'tresorier_general']
+const ROLES_CONNUS = ['national', 'admin', 'pasteur', 'departement', 'secretaire', 'tresorier', 'secretaire_general', 'tresorier_general']
 
 function Contenu() {
   const { user, profil, chargement, deconnexion } = useAuth()
@@ -45,6 +46,7 @@ function Contenu() {
   // Libellé du titre selon le rôle
   const titrePage = {
     national: 'Présidence',
+    admin: 'Administration',
     secretaire_general: 'Secrétariat Général',
     tresorier_general: 'Trésorerie Générale',
     pasteur: 'Pastorale',
@@ -78,6 +80,7 @@ function Contenu() {
           </div>
         )}
         {profil.role === 'national' && <DashboardNational />}
+        {profil.role === 'admin' && <DashboardAdmin profil={profil} />}
         {profil.role === 'pasteur' && <DashboardPasteur profil={profil} />}
         {profil.role === 'departement' && <DashboardDepartement profil={profil} />}
         {profil.role === 'secretaire' && <DashboardSecretaireBranche profil={profil} />}
