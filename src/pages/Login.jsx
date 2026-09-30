@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { LOGO_MIMC } from '../assets/logo-mimc.js'
 
 export default function Login() {
   const { connexion } = useAuth()
@@ -22,10 +23,23 @@ export default function Login() {
   }
 
   return (
-    <div className="ecran-centre">
+    <div className="ecran-centre" style={{ background: 'var(--papier)' }}>
       <form className="carte-connexion" onSubmit={valider}>
-        <h1 className="titre-app">Espace de gestion</h1>
-        <p className="sous-titre">Connectez-vous avec le compte qui vous a été créé.</p>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <img
+            src={LOGO_MIMC}
+            alt="Logo M.I.M.C"
+            style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '50%', marginBottom: '0.75rem' }}
+          />
+          <h1 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--encre)', fontFamily: 'Fraunces, serif' }}>
+            M.I.M.C
+          </h1>
+          <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: 'var(--texte-doux)', letterSpacing: '0.03em' }}>
+            Ministère d'Impact La Montagne de Consolation en Christ
+          </p>
+        </div>
+
+        <p className="sous-titre" style={{ textAlign: 'center' }}>Espace de gestion — Connexion</p>
 
         <label className="champ-label" htmlFor="email">E-mail</label>
         <input

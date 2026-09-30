@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from './lib/firebase.js'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import { LOGO_MIMC } from './assets/logo-mimc.js'
 import Login from './pages/Login.jsx'
 import DashboardNational from './pages/DashboardNational.jsx'
 import DashboardPasteur from './pages/DashboardPasteur.jsx'
@@ -59,13 +60,12 @@ function Contenu() {
     <div className="app-shell">
       <header className="entete">
         <div className="entete-logo">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="13" y="1" width="6" height="6" rx="1" fill="white" opacity="0.9"/>
-            <polygon points="4,14 16,4 28,14" fill="white" opacity="0.95"/>
-            <rect x="5" y="13" width="22" height="16" rx="1" fill="white" opacity="0.85"/>
-            <rect x="13" y="19" width="6" height="10" fill="#1A6BAF"/>
-          </svg>
-          Église 7
+          <img
+            src={LOGO_MIMC}
+            alt="Logo M.I.M.C"
+            style={{ height: '38px', width: '38px', objectFit: 'contain', borderRadius: '50%' }}
+          />
+          <span>M.I.M.C</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <NotificationsBell role={profil.role} brancheId={profil.brancheId} />

@@ -1,14 +1,14 @@
 :root {
-  --encre: #1A6BAF;
-  --encre-claire: #2980C8;
-  --papier: #F0F6FF;
+  --encre: #8B1A2B;
+  --encre-claire: #A52336;
+  --papier: #FDF8F5;
   --papier-carte: #FFFFFF;
-  --ocre: #C98A2C;
-  --ocre-sombre: #A66F1F;
+  --ocre: #C9992C;
+  --ocre-sombre: #A67A20;
   --sauge: #2E8B57;
-  --texte: #1A2535;
-  --texte-doux: #4A6080;
-  --ligne: #C8DCF0;
+  --texte: #1A1A1A;
+  --texte-doux: #5C4A4A;
+  --ligne: #E8D8D0;
   --erreur: #A6402D;
 }
 
