@@ -9,6 +9,7 @@ service cloud.firestore {
       return {
         "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national",
         "wMSZpdOyttbZegS9TtwqlhcLYYA2": "pasteur"
+        // Nouveaux comptes BEN ajoutés ici après création
       }[uid];
     }
 
@@ -36,8 +37,26 @@ service cloud.firestore {
       return request.auth != null && roleDeUid(request.auth.uid) == 'admin';
     }
 
+    function estVicePresident() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'vice_president';
+    }
+
+    function estOrganisateur() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'organisateur_national';
+    }
+
+    function estConseiller() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'conseiller_national';
+    }
+
+    function estCommissaire() {
+      return request.auth != null && roleDeUid(request.auth.uid) == 'commissaire_comptes';
+    }
+
     function estBureauNational() {
-      return estNational() || estAdmin() || estSecretaireGeneral() || estTresorierGeneral();
+      return estNational() || estAdmin() || estVicePresident()
+        || estSecretaireGeneral() || estTresorierGeneral()
+        || estOrganisateur() || estConseiller() || estCommissaire();
     }
 
     function estPasteurDe(brancheId) {
@@ -203,6 +222,51 @@ service cloud.firestore {
     match /annoncesNationales/{annonceId} {
       allow read: if request.auth != null;
       allow write: if estNational();
+    }
+
+    // ── Gestion des absences (titulaire/adjoint) ──────────────────────────────
+    match /absences/{roleId} {
+      allow read: if request.auth != null;
+      allow write: if estNational() || estSecretaireGeneral() || estTresorierGeneral()
+        || estPasteurDe(roleId.split('_')[1]);
+    }
+
+    // ── Réunions, convocations, logistique BEN ────────────────────────────────
+    match /reunionsBEN/{id} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estOrganisateur() || estVicePresident();
+    }
+
+    match /convocationsBEN/{id} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estOrganisateur() || estVicePresident();
+    }
+
+    match /logistiqueBEN/{id} {
+      allow read: if estBureauNational();
+      allow write: if estNational() || estOrganisateur() || estVicePresident();
+    }
+
+    // ── Dossiers de conseil et conflits ──────────────────────────────────────
+    match /dossiersConseil/{id} {
+      allow read: if estNational() || estConseiller() || estVicePresident();
+      allow write: if estConseiller() || estNational();
+    }
+
+    match /conflitsMIMC/{id} {
+      allow read: if estNational() || estConseiller() || estVicePresident();
+      allow write: if estConseiller() || estNational();
+    }
+
+    // ── Commissariat aux comptes ──────────────────────────────────────────────
+    match /rapportsCommissariat/{id} {
+      allow read: if estBureauNational();
+      allow write: if estCommissaire();
+    }
+
+    match /observationsCommissariat/{id} {
+      allow read: if estBureauNational();
+      allow write: if estCommissaire();
     }
 
     // ── Projets nationaux ─────────────────────────────────────────────────────

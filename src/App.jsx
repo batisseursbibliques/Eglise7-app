@@ -12,9 +12,28 @@ import DashboardTresorierBranche from './pages/DashboardTresorierBranche.jsx'
 import DashboardSecretaireGeneral from './pages/DashboardSecretaireGeneral.jsx'
 import DashboardTresorierGeneral from './pages/DashboardTresorierGeneral.jsx'
 import DashboardAdmin from './pages/DashboardAdmin.jsx'
+import DashboardVicePresident from './pages/DashboardVicePresident.jsx'
+import DashboardOrganisateurNational from './pages/DashboardOrganisateurNational.jsx'
+import DashboardConseillerNational from './pages/DashboardConseillerNational.jsx'
+import DashboardCommissaireComptes from './pages/DashboardCommissaireComptes.jsx'
+import { BoutonAbsence } from './pages/GestionAbsence.jsx'
+
+// Wrapper du dashboard national avec le bouton d'absence pour le Vice-Président
+function DashboardNationalAvecAbsence({ profil }) {
+  return (
+    <div>
+      <BoutonAbsence
+        roleId="national"
+        nomTitulaire={profil?.nom ?? 'Président'}
+        nomAdjoint="le Vice-Président"
+      />
+      <DashboardNational />
+    </div>
+  )
+}
 import NotificationsBell from './pages/NotificationsBell.jsx'
 
-const ROLES_CONNUS = ['national', 'admin', 'pasteur', 'departement', 'secretaire', 'tresorier', 'secretaire_general', 'tresorier_general']
+const ROLES_CONNUS = ['national', 'admin', 'vice_president', 'organisateur_national', 'conseiller_national', 'commissaire_comptes', 'pasteur', 'departement', 'secretaire', 'tresorier', 'secretaire_general', 'tresorier_general']
 
 function Contenu() {
   const { user, profil, chargement, deconnexion } = useAuth()
@@ -46,15 +65,19 @@ function Contenu() {
 
   // Libellé du titre selon le rôle
   const titrePage = {
-    national: 'Présidence',
-    admin: 'Administration',
+    national: 'Présidence — M.I.M.C',
+    admin: 'Gestion des comptes',
+    vice_president: 'Vice-Présidence — M.I.M.C',
+    organisateur_national: 'Organisateur National',
+    conseiller_national: 'Conseiller National',
+    commissaire_comptes: 'Commissariat aux Comptes',
     secretaire_general: 'Secrétariat Général du BEN',
     tresorier_general: 'Trésorerie Générale du BEN',
-    pasteur: 'Pastorale',
-    secretaire: 'Secrétariat',
-    tresorier: 'Trésorerie',
-    departement: 'Département',
-  }[profil.role] ?? 'Espace de gestion'
+    pasteur: 'Pastorale — Pasteur Responsable',
+    secretaire: 'Secrétariat Local',
+    tresorier: 'Trésorerie Locale',
+    departement: 'Responsable de Ministère',
+  }[profil.role] ?? 'M.I.M.C — Espace de gestion'
 
   return (
     <div className="app-shell">
@@ -79,8 +102,12 @@ function Contenu() {
             <button className="bouton-lien" onClick={deconnexion}>Se déconnecter</button>
           </div>
         )}
-        {profil.role === 'national' && <DashboardNational />}
+        {profil.role === 'national' && <DashboardNationalAvecAbsence profil={profil} />}
         {profil.role === 'admin' && <DashboardAdmin profil={profil} />}
+        {profil.role === 'vice_president' && <DashboardVicePresident profil={profil} />}
+        {profil.role === 'organisateur_national' && <DashboardOrganisateurNational profil={profil} />}
+        {profil.role === 'conseiller_national' && <DashboardConseillerNational profil={profil} />}
+        {profil.role === 'commissaire_comptes' && <DashboardCommissaireComptes profil={profil} />}
         {profil.role === 'pasteur' && <DashboardPasteur profil={profil} />}
         {profil.role === 'departement' && <DashboardDepartement profil={profil} />}
         {profil.role === 'secretaire' && <DashboardSecretaireBranche profil={profil} />}
