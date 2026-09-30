@@ -9,6 +9,7 @@ import DashboardBranches from './DashboardBranches.jsx'
 import DashboardRapports from './DashboardRapports.jsx'
 import GestionProjets from './GestionProjets.jsx'
 import VueMessagesPresident from './VueMessagesPresident.jsx'
+import GestionMessages from './GestionMessages.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
 export default function DashboardNational() {
@@ -105,11 +106,43 @@ export default function DashboardNational() {
         <DashboardCommunication uid={user.uid} peutPublierNational={true} />
       )}
 
-      {onglet === 'messages' && <VueMessagesPresident />}
+      {onglet === 'messages' && (
+        <VueMessagesNational uid={user.uid} nom={profil?.nom ?? 'Président'} />
+      )}
 
       {onglet === 'projets' && (
         <VueProjetsNational />
       )}
+    </div>
+  )
+}
+
+// Vue Messages du président : ses propres messages + accordéon des autres pasteurs
+function VueMessagesNational({ uid, nom }) {
+  const [sousOnglet, setSousOnglet] = useState('mes-messages')
+
+  return (
+    <div>
+      <nav className="onglets" style={{ marginBottom: '1.25rem' }}>
+        <button
+          className={sousOnglet === 'mes-messages' ? 'onglet actif' : 'onglet'}
+          onClick={() => setSousOnglet('mes-messages')}
+        >
+          Mes messages
+        </button>
+        <button
+          className={sousOnglet === 'pasteurs' ? 'onglet actif' : 'onglet'}
+          onClick={() => setSousOnglet('pasteurs')}
+        >
+          Messages des pasteurs
+        </button>
+      </nav>
+
+      {sousOnglet === 'mes-messages' && (
+        <GestionMessages pasteurUid={uid} pasteurNom={nom} lectureSeule={false} />
+      )}
+
+      {sousOnglet === 'pasteurs' && <VueMessagesPresident />}
     </div>
   )
 }
