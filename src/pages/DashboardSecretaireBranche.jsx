@@ -13,7 +13,7 @@ export default function DashboardSecretaireBranche({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">{branche?.nom ?? 'Ma branche'} — Secrétariat</h1>
+      <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Secrétariat</h1>
       <nav className="onglets">
         <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres</button>
         <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>Procès-verbaux</button>

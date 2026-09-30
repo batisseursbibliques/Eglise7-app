@@ -18,13 +18,13 @@ export default function DashboardTresorierGeneral({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">Trésorerie Générale</h1>
+      <h1 className="titre-page">Trésorerie Générale du BEN — M.I.M.C</h1>
       <nav className="onglets">
         <button className={onglet === 'virements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('virements')}>Virements</button>
         <button className={onglet === 'consolidation' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('consolidation')}>Consolidation</button>
-        <button className={onglet === 'branches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('branches')}>Caisses des branches</button>
-        <button className={onglet === 'projetsNationaux' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsNationaux')}>Projets nationaux</button>
-        <button className={onglet === 'projetsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsBranches')}>Projets des branches</button>
+        <button className={onglet === 'branches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('branches')}>Caisses des églises locales</button>
+        <button className={onglet === 'projetsNationaux' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsNationaux')}>Projets du BEN</button>
+        <button className={onglet === 'projetsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsBranches')}>Projets des églises locales</button>
       </nav>
       {onglet === 'virements' && <GestionVirements uid={user?.uid} />}
       {onglet === 'consolidation' && <ConsolidationFinanciere />}
@@ -214,7 +214,7 @@ function CaissesBranches() {
   )
 }
 
-// Vue consolidée des projets de toutes les branches (lecture seule pour le TG)
+// Vue consolidée des projets de toutes les églises locales (lecture seule pour le TG)
 function ProjetsBranches() {
   const [branches, setBranches] = useState([])
   const [brancheSelectionnee, setBrancheSelectionnee] = useState(null)

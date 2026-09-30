@@ -10,7 +10,7 @@ export default function DashboardAdmin({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">Administration — Gestion des comptes</h1>
+      <h1 className="titre-page">M.I.M.C — Gestion des comptes</h1>
       <nav className="onglets">
         <button className={onglet === 'comptes' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('comptes')}>Créer un compte</button>
         <button className={onglet === 'liste' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('liste')}>Tous les comptes</button>

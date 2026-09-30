@@ -13,7 +13,7 @@ import GestionMessages from './GestionMessages.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
 export default function DashboardNational() {
-  const { user } = useAuth()
+  const { user, profil } = useAuth()
   const [onglet, setOnglet] = useState('vue')
   const [branches, setBranches] = useState([])
   const [virements, setVirements] = useState([])
@@ -44,7 +44,7 @@ export default function DashboardNational() {
 
   return (
     <div>
-      <h1 className="titre-page">Vue d'ensemble du mouvement</h1>
+      <h1 className="titre-page">M.I.M.C — Bureau Exécutif National</h1>
 
       <nav className="onglets">
         <button className={onglet === 'vue' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('vue')}>Virements</button>
@@ -59,7 +59,7 @@ export default function DashboardNational() {
       {onglet === 'vue' && (
         <div className="grille-deux">
           <section className="carte">
-            <h2 className="titre-carte">Branches ({branches.length})</h2>
+            <h2 className="titre-carte">Églises locales ({branches.length})</h2>
             <ul className="liste">
               {branches.map((b) => (
                 <li key={b.id} className="ligne-liste">
@@ -72,7 +72,7 @@ export default function DashboardNational() {
           </section>
 
           <section className="carte">
-            <h2 className="titre-carte">Virements en attente de validation</h2>
+            <h2 className="titre-carte">Reversements en attente de validation</h2>
             <ul className="liste">
               {virements.map((v) => {
                 const branche = branches.find((b) => b.id === v.brancheId)
@@ -163,10 +163,10 @@ function VueProjetsNational() {
     <div>
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
         <button className={vue === 'national' ? 'bouton-principal' : 'bouton-secondaire'} onClick={() => setVue('national')}>
-          Projets nationaux
+          Projets du BEN
         </button>
         <button className={vue === 'branches' ? 'bouton-principal' : 'bouton-secondaire'} onClick={() => setVue('branches')}>
-          Projets des branches
+          Projets des églises locales
         </button>
       </div>
 

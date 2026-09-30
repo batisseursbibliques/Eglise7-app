@@ -8,12 +8,12 @@ export default function DashboardSecretaireGeneral({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">Secrétariat Général</h1>
+      <h1 className="titre-page">Secrétariat Général du BEN — M.I.M.C</h1>
       <nav className="onglets">
         <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres (toutes branches)</button>
-        <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>Procès-verbaux nationaux</button>
-        <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier national</button>
-        <button className={onglet === 'rapportsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapportsBranches')}>Rapports des branches</button>
+        <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>PV du BEN</button>
+        <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier du BEN</button>
+        <button className={onglet === 'rapportsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapportsBranches')}>Rapports des églises locales</button>
       </nav>
       {onglet === 'membres' && <VueMembresNational />}
       {onglet === 'pv' && <PVNational uid={uid} />}
@@ -57,7 +57,7 @@ function VueMembresNational() {
               <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
             </li>
           ))}
-          {membres.length === 0 && <p className="note">Aucun membre enregistré dans les branches.</p>}
+          {membres.length === 0 && <p className="note">Aucun membre enregistré dans les églises locales.</p>}
         </ul>
       </section>
     </div>
@@ -94,7 +94,7 @@ function PVNational({ uid }) {
         </form>
       </section>
       <section className="carte">
-        <h2 className="titre-carte">PV nationaux ({pvs.length})</h2>
+        <h2 className="titre-carte">PV du BEN ({pvs.length})</h2>
         <ul className="liste">
           {pvs.map((p) => (
             <li key={p.id} className="ligne-liste-verticale">
@@ -178,7 +178,7 @@ function RapportsPVBranches() {
 
   return (
     <section className="carte">
-      <h2 className="titre-carte">Procès-verbaux de toutes les branches</h2>
+      <h2 className="titre-carte">Procès-verbaux de toutes les églises locales</h2>
       <ul className="liste">
         {pvs.map((p) => {
           const branche = branches.find((b) => b.id === p.brancheId)

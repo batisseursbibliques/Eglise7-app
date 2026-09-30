@@ -103,14 +103,14 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
               />
               <select value={roleCree} onChange={(e) => setRoleCree(e.target.value)} className="champ-saisie">
                 <optgroup label="Bureau national">
-                  <option value="admin">Gestionnaire de comptes (Admin)</option>
+                  <option value="admin">Gestionnaire de comptes</option>
                   <option value="secretaire_general">Secrétaire Général</option>
                   <option value="tresorier_general">Trésorier Général</option>
                 </optgroup>
                 <optgroup label="Branche locale">
-                  <option value="pasteur">Pasteur de branche</option>
-                  <option value="secretaire">Secrétaire de branche</option>
-                  <option value="tresorier">Trésorier de branche</option>
+                  <option value="pasteur">Pasteur Responsable</option>
+                  <option value="secretaire">Secrétaire Local</option>
+                  <option value="tresorier">Trésorier Local</option>
                 </optgroup>
               </select>
               {['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && (

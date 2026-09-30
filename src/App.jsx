@@ -48,8 +48,8 @@ function Contenu() {
   const titrePage = {
     national: 'Présidence',
     admin: 'Administration',
-    secretaire_general: 'Secrétariat Général',
-    tresorier_general: 'Trésorerie Générale',
+    secretaire_general: 'Secrétariat Général du BEN',
+    tresorier_general: 'Trésorerie Générale du BEN',
     pasteur: 'Pastorale',
     secretaire: 'Secrétariat',
     tresorier: 'Trésorerie',

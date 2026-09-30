@@ -45,7 +45,7 @@ export default function DashboardCommunication({ brancheId, uid, peutPublierBran
           <form onSubmit={publier} className="formulaire">
             {peutPublierBranche && peutPublierNational && (
               <select value={portee} onChange={(e) => setPortee(e.target.value)} className="champ-saisie">
-                <option value="branche">Pour ma branche</option>
+                <option value="branche">Pour mon église locale</option>
                 <option value="national">Pour tout le mouvement</option>
               </select>
             )}
@@ -80,7 +80,7 @@ export default function DashboardCommunication({ brancheId, uid, peutPublierBran
         {brancheId && (
           <>
             <h2 className="titre-carte" style={{ marginTop: annoncesNationales.length > 0 ? '2rem' : 0 }}>
-              Annonces de la branche
+              Annonces de l'église locale
             </h2>
             <ul className="liste">
               {annonces.map((a) => (

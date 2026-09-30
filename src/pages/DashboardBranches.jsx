@@ -36,10 +36,10 @@ export default function DashboardBranches({ branches }) {
         </form>
         <p className="note">
           Une fois la branche créée, demande à Claude de créer le compte du pasteur et de
-          l'associer à cette branche dans firestore.rules.
+          l'associer à cette église locale dans firestore.rules.
         </p>
 
-        <h2 className="titre-carte" style={{ marginTop: '2rem' }}>Branches ({branches.length})</h2>
+        <h2 className="titre-carte" style={{ marginTop: '2rem' }}>Églises locales ({branches.length})</h2>
         <ul className="liste">
           {branches.map((b) => (
             <li key={b.id} className="ligne-liste" style={{ cursor: 'pointer' }} onClick={() => setBrancheSelectionnee(b.id)}>

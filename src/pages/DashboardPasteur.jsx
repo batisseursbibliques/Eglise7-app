@@ -52,7 +52,7 @@ export default function DashboardPasteur({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">{branche?.nom ?? 'Ma branche'}</h1>
+      <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'}</h1>
 
       <nav className="onglets">
         <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
@@ -341,7 +341,7 @@ function LectureSecretariat({ brancheId }) {
   return (
     <div>
       <div style={{ background: '#EAF3FF', border: '1px solid var(--ligne)', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1rem' }}>
-        <p className="note" style={{ margin: 0 }}>📋 Vue en lecture seule — travail du secrétaire de votre branche.</p>
+        <p className="note" style={{ margin: 0 }}>📋 Vue en lecture seule — travail du secrétaire de votre église locale.</p>
       </div>
       <nav className="onglets">
         <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres ({membres.length})</button>
@@ -413,7 +413,7 @@ function LectureTresorerie({ brancheId, mouvements, solde, seuil }) {
   return (
     <div>
       <div style={{ background: '#EAF3FF', border: '1px solid var(--ligne)', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1rem' }}>
-        <p className="note" style={{ margin: 0 }}>💰 Vue en lecture seule — travail du trésorier de votre branche.</p>
+        <p className="note" style={{ margin: 0 }}>💰 Vue en lecture seule — travail du trésorier de votre église locale.</p>
       </div>
       <div className="grille-deux">
         <section className="carte">

@@ -45,7 +45,7 @@ export default function DashboardTresorierBranche({ profil }) {
 
   return (
     <div>
-      <h1 className="titre-page">{branche?.nom ?? 'Ma branche'} — Trésorerie</h1>
+      <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Trésorerie</h1>
       <nav className="onglets">
         <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
         <button className={onglet === 'rapport' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapport')}>Rapport financier</button>

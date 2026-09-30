@@ -60,7 +60,7 @@ export default function GestionProjets({ brancheId, uid, lectureSeule = false })
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 className="titre-carte" style={{ margin: 0 }}>
-          {brancheId ? 'Projets de la branche' : 'Projets nationaux'}
+          {brancheId ? "Projets de l'église locale" : 'Projets du BEN'}
         </h2>
         {!lectureSeule && (
           <button className="bouton-principal" onClick={() => setVue('creer')}>
