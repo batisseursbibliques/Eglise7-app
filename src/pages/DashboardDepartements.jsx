@@ -92,7 +92,7 @@ function DetailDepartement({ brancheId, departement, onFermer }) {
         />
         <p className="note" style={{ marginTop: '-0.5rem' }}>
           Pour que le responsable ait son propre accès à l'application (compte + comptes-rendus),
-          demande à Claude de créer son compte et de l'associer à ce département.
+          contactez le gestionnaire de comptes pour créer son compte et l'associer à ce département.
         </p>
 
         <label className="champ-label">Objectifs</label>

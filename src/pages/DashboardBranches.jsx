@@ -5,7 +5,7 @@ import { db } from '../lib/firebase.js'
 export default function DashboardBranches({ branches }) {
   const [nom, setNom] = useState('')
   const [ville, setVille] = useState('')
-  const [seuilSolde, setSeuilSolde] = useState('')
+  const [seuilSolde, setSeuilSolde] = useState('50000')  // Plafond MIMC : 50 000 FCFA
   const [brancheSelectionnee, setBrancheSelectionnee] = useState(null)
 
   async function creerBranche(e) {
@@ -29,13 +29,13 @@ export default function DashboardBranches({ branches }) {
           <input type="text" placeholder="Nom de l'église/branche" value={nom} onChange={(e) => setNom(e.target.value)} className="champ-saisie" required />
           <input type="text" placeholder="Ville" value={ville} onChange={(e) => setVille(e.target.value)} className="champ-saisie" />
           <input
-            type="number" placeholder="Seuil de solde de caisse (FCFA)" value={seuilSolde}
+            type="number" placeholder="Plafond de caisse (FCFA)" value={seuilSolde}
             onChange={(e) => setSeuilSolde(e.target.value)} className="champ-saisie"
           />
           <button type="submit" className="bouton-principal">Créer la branche</button>
         </form>
         <p className="note">
-          Une fois la branche créée, demande à Claude de créer le compte du pasteur et de
+          Une fois l'église locale créée, utilisez l'onglet Utilisateurs pour créer le compte du Pasteur Responsable et de
           l'associer à cette église locale dans firestore.rules.
         </p>
 
@@ -91,7 +91,7 @@ function DetailBranche({ branche, onFermer }) {
         <input type="text" value={pasteurNom} onChange={(e) => setPasteurNom(e.target.value)} className="champ-saisie" />
         <p className="note" style={{ marginTop: '-0.5rem' }}>
           Ce champ est juste informatif. Le compte du pasteur (accès à l'application) doit
-          être créé et lié par Claude dans firestore.rules.
+          être activé par le gestionnaire technique de l'application.
         </p>
 
         <label className="champ-label">Seuil de solde de caisse (FCFA)</label>

@@ -71,7 +71,7 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
       }
 
       setDernierUid({ uid: nouvelUid, ...donneesProfil })
-      setStatutMessage({ type: 'succes', texte: 'Compte créé. Copie les infos ci-dessous pour Claude.' })
+      setStatutMessage({ type: 'succes', texte: 'Compte créé. Transmettez les informations ci-dessous au gestionnaire technique pour activation.' })
       setNom('')
       setEmail('')
       setMotDePasse('')

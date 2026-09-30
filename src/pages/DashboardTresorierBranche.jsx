@@ -118,13 +118,21 @@ export default function DashboardTresorierBranche({ profil }) {
               </div>
             </div>
           </section>
+
           <section className="carte">
-            <h2 className="titre-carte">Informations</h2>
+            <h2 className="titre-carte">Reversement au BEN — 25 %</h2>
+            <ReversementMIMC mouvements={mouvements} brancheId={brancheId} uid={uid} />
+          </section>
+
+          <section className="carte">
+            <h2 className="titre-carte">Plafond de caisse</h2>
             <p className="note">{mouvements.length} mouvement(s) enregistré(s) au total.</p>
             {seuil != null && (
               <p className={depasseSeuil ? 'alerte' : 'note'} style={{ marginTop: '0.5rem' }}>
-                Seuil autorisé par le national : {seuil.toLocaleString('fr-FR')} FCFA.
-                {depasseSeuil ? ' Le solde dépasse ce seuil — signalez-le au pasteur.' : ' Le solde est dans les limites autorisées.'}
+                Plafond M.I.M.C : <strong>{seuil.toLocaleString('fr-FR')} FCFA</strong>.
+                {depasseSeuil
+                  ? ' Le solde dépasse ce plafond — un reversement vers le BEN est requis.'
+                  : ' Le solde est dans les limites autorisées.'}
               </p>
             )}
           </section>
@@ -132,6 +140,104 @@ export default function DashboardTresorierBranche({ profil }) {
       )}
       {onglet === 'projets' && (
         <GestionProjets brancheId={brancheId} uid={uid} />
+      )}
+    </div>
+  )
+}
+
+// ── Calcul et déclaration du reversement de 25 % au BEN ─────────────────────
+function ReversementMIMC({ mouvements, brancheId, uid }) {
+  const [moisSelectionne, setMoisSelectionne] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [enCours, setEnCours] = useState(false)
+  const [confirme, setConfirme] = useState(false)
+
+  // Revenus du mois sélectionné (dîmes + collectes + dons)
+  const typesRevenu = ['dime', 'collecte', 'don']
+  const revenusMois = mouvements.filter((m) => {
+    if (!typesRevenu.includes(m.type)) return false
+    if (!m.date) return false
+    const d = m.date.toDate ? m.date.toDate() : new Date(m.date)
+    const moisMvt = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    return moisMvt === moisSelectionne
+  })
+
+  const totalRevenus = revenusMois.reduce((s, m) => s + m.montant, 0)
+  const montantReversement = Math.round(totalRevenus * 0.25)
+
+  async function declarerReversement() {
+    if (montantReversement <= 0) return
+    setEnCours(true)
+    const { addDoc, collection, serverTimestamp } = await import('firebase/firestore')
+    const { db } = await import('../lib/firebase.js')
+    await addDoc(collection(db, 'branches', brancheId, 'virements'), {
+      montant: montantReversement,
+      reference: `Reversement 25% — ${moisSelectionne}`,
+      statut: 'declare',
+      mois: moisSelectionne,
+      totalRevenusBase: totalRevenus,
+      auteurUid: uid,
+      date: serverTimestamp(),
+    })
+    setEnCours(false)
+    setConfirme(true)
+    setTimeout(() => setConfirme(false), 4000)
+  }
+
+  // Générer les 12 derniers mois pour la liste déroulante
+  const moisDisponibles = []
+  const maintenant = new Date()
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(maintenant.getFullYear(), maintenant.getMonth() - i, 1)
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    moisDisponibles.push({ val, label })
+  }
+
+  return (
+    <div>
+      <p className="note" style={{ marginBottom: '0.75rem' }}>
+        Selon les statuts M.I.M.C, chaque église locale reverse <strong>25 %</strong> de
+        ses revenus mensuels (dîmes, collectes, dons) au Bureau Exécutif National.
+      </p>
+
+      <label className="champ-label">Mois de référence</label>
+      <select
+        value={moisSelectionne}
+        onChange={(e) => setMoisSelectionne(e.target.value)}
+        className="champ-saisie"
+        style={{ marginBottom: '0.75rem' }}
+      >
+        {moisDisponibles.map(({ val, label }) => (
+          <option key={val} value={val}>{label}</option>
+        ))}
+      </select>
+
+      <ul className="liste" style={{ marginBottom: '1rem' }}>
+        <li className="ligne-liste">
+          <span>Revenus du mois</span>
+          <span className="montant-positif">{totalRevenus.toLocaleString('fr-FR')} FCFA</span>
+        </li>
+        <li className="ligne-liste" style={{ fontWeight: 700 }}>
+          <span>25 % à reverser au BEN</span>
+          <span style={{ color: 'var(--encre)', fontSize: '1.1rem' }}>
+            {montantReversement.toLocaleString('fr-FR')} FCFA
+          </span>
+        </li>
+      </ul>
+
+      {montantReversement > 0 ? (
+        <button
+          className="bouton-principal"
+          onClick={declarerReversement}
+          disabled={enCours || confirme}
+        >
+          {confirme ? '✓ Reversement déclaré au BEN' : enCours ? 'Envoi…' : 'Déclarer ce reversement au BEN'}
+        </button>
+      ) : (
+        <p className="note">Aucun revenu enregistré pour ce mois.</p>
       )}
     </div>
   )
