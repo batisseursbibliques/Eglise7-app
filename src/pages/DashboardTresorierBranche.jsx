@@ -12,9 +12,9 @@ const TYPES_MOUVEMENT = [
 import GestionProjets from './GestionProjets.jsx'
 import { BoutonAbsence } from './GestionAbsence.jsx'
 
-export default function DashboardTresorierBranche({ profil, lectureSeule = false }) {
+export default function DashboardTresorierBranche({ profil, lectureSeule = false , page = 'caisse'}) {
   const { brancheId, uid } = profil
-  const [onglet, setOnglet] = useState('caisse')
+  const onglet = page
   const [branche, setBranche] = useState(null)
   const [mouvements, setMouvements] = useState([])
   const [type, setType] = useState('dime')
@@ -54,12 +54,6 @@ export default function DashboardTresorierBranche({ profil, lectureSeule = false
         />
       )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Trésorerie</h1>
-      <nav className="onglets">
-        <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
-        <button className={onglet === 'rapport' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapport')}>Rapport financier</button>
-        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>Projets</button>
-      </nav>
-
       {onglet === 'caisse' && (
         <div className="grille-deux">
           <section className="carte">

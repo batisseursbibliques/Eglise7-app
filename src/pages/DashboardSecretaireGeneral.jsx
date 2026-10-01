@@ -2,19 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, collectionGroup } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
-export default function DashboardSecretaireGeneral({ profil }) {
+export default function DashboardSecretaireGeneral({ profil , page = 'membres'}) {
   const { uid } = profil
-  const [onglet, setOnglet] = useState('membres')
+  const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Secrétariat Général du BEN — M.I.M.C</h1>
-      <nav className="onglets">
-        <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres (toutes branches)</button>
-        <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>PV du BEN</button>
-        <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier du BEN</button>
-        <button className={onglet === 'rapportsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapportsBranches')}>Rapports des églises locales</button>
-      </nav>
       {onglet === 'membres' && <VueMembresNational />}
       {onglet === 'pv' && <PVNational uid={uid} />}
       {onglet === 'courrier' && <CourrierNational uid={uid} />}

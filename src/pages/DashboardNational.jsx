@@ -12,9 +12,9 @@ import VueMessagesPresident from './VueMessagesPresident.jsx'
 import GestionMessages from './GestionMessages.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
-export default function DashboardNational() {
+export default function DashboardNational({ page = 'vue', deconnexion }) {
   const { user, profil } = useAuth()
-  const [onglet, setOnglet] = useState('vue')
+  const onglet = page
   const [branches, setBranches] = useState([])
   const [virements, setVirements] = useState([])
 
@@ -44,18 +44,6 @@ export default function DashboardNational() {
 
   return (
     <div>
-      <h1 className="titre-page">M.I.M.C — Bureau Exécutif National</h1>
-
-      <nav className="onglets">
-        <button className={onglet === 'vue' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('vue')}>Virements</button>
-        <button className={onglet === 'branches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('branches')}>Branches</button>
-        <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
-        <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
-        <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
-        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>📦 Projets</button>
-        <button className={onglet === 'messages' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('messages')}>✍️ Messages</button>
-      </nav>
-
       {onglet === 'vue' && (
         <div className="grille-deux">
           <section className="carte">

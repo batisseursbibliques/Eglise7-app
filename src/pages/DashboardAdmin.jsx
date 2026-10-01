@@ -5,18 +5,12 @@ import {
 import { db } from '../lib/firebase.js'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 
-export default function DashboardAdmin({ profil }) {
-  const [onglet, setOnglet] = useState('comptes')
+export default function DashboardAdmin({ profil , page = 'comptes'}) {
+  const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">M.I.M.C — Gestion des comptes</h1>
-      <nav className="onglets">
-        <button className={onglet === 'comptes' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('comptes')}>Créer un compte</button>
-        <button className={onglet === 'liste' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('liste')}>Tous les comptes</button>
-        <button className={onglet === 'reinit' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('reinit')}>Réinitialisation</button>
-      </nav>
-
       {onglet === 'comptes' && (
         <DashboardUtilisateurs role="admin" brancheId={null} />
       )}

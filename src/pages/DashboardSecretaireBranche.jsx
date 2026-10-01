@@ -4,9 +4,9 @@ import { db } from '../lib/firebase.js'
 
 import { BoutonAbsence } from './GestionAbsence.jsx'
 
-export default function DashboardSecretaireBranche({ profil, lectureSeule = false }) {
+export default function DashboardSecretaireBranche({ profil, lectureSeule = false , page = 'membres'}) {
   const { brancheId, uid } = profil
-  const [onglet, setOnglet] = useState('membres')
+  const onglet = page
   const [branche, setBranche] = useState(null)
 
   useEffect(() => {
@@ -23,11 +23,6 @@ export default function DashboardSecretaireBranche({ profil, lectureSeule = fals
         />
       )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Secrétariat</h1>
-      <nav className="onglets">
-        <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres</button>
-        <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>Procès-verbaux</button>
-        <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier</button>
-      </nav>
       {onglet === 'membres' && <GestionMembres brancheId={brancheId} uid={uid} />}
       {onglet === 'pv' && <GestionPV brancheId={brancheId} uid={uid} />}
       {onglet === 'courrier' && <GestionCourrier brancheId={brancheId} uid={uid} />}

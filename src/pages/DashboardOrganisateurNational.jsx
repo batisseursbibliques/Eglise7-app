@@ -7,17 +7,12 @@ import { db } from '../lib/firebase.js'
 
 // L'Organisateur National gère la logistique des réunions du BEN :
 // ordre du jour, convocations, compte-rendu de présence.
-export default function DashboardOrganisateurNational({ profil }) {
-  const [onglet, setOnglet] = useState('reunions')
+export default function DashboardOrganisateurNational({ profil , page = 'reunions'}) {
+  const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Organisateur National — M.I.M.C</h1>
-      <nav className="onglets">
-        <button className={onglet === 'reunions' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('reunions')}>Réunions BEN</button>
-        <button className={onglet === 'convocations' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('convocations')}>Convocations</button>
-        <button className={onglet === 'logistique' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('logistique')}>Logistique</button>
-      </nav>
       {onglet === 'reunions' && <GestionReunions uid={profil.uid} />}
       {onglet === 'convocations' && <GestionConvocations uid={profil.uid} />}
       {onglet === 'logistique' && <NotesLogistique uid={profil.uid} />}

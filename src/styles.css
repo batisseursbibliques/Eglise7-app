@@ -228,3 +228,149 @@ h1, h2, h3 {
 
 .montant-positif { color: var(--sauge); font-weight: 600; }
 .montant-negatif { color: var(--erreur); font-weight: 600; }
+
+/* ── Navigation tiroir latéral ───────────────────────────────────────────── */
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+.entete {
+  background: var(--encre);
+  color: #fff;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.entete-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.btn-hamburger {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.btn-hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.btn-hamburger.ouvert span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.btn-hamburger.ouvert span:nth-child(2) { opacity: 0; }
+.btn-hamburger.ouvert span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Fond semi-transparent derrière le tiroir */
+.tiroir-fond {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Le tiroir lui-même */
+.tiroir {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(300px, 85vw);
+  background: var(--encre);
+  color: #fff;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: glisser 0.22s ease;
+}
+@keyframes glisser { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.tiroir-entete {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.tiroir-profil {
+  padding: 1rem 1.25rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.tiroir-profil p { margin: 0; font-size: 0.85rem; opacity: 0.75; }
+.tiroir-profil strong { font-size: 1rem; }
+
+.tiroir-section-label {
+  padding: 0.75rem 1.25rem 0.25rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.tiroir-lien {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.25rem;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: background 0.15s;
+  border-radius: 0;
+}
+.tiroir-lien:hover, .tiroir-lien.actif {
+  background: rgba(255,255,255,0.12);
+}
+.tiroir-lien.actif { font-weight: 600; }
+.tiroir-lien-icone { font-size: 1.1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+
+.tiroir-separateur { height: 1px; background: rgba(255,255,255,0.12); margin: 0.5rem 1.25rem; }
+
+.tiroir-bas {
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.btn-fermer-tiroir {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+/* Zone de contenu principale */
+.contenu { flex: 1; padding: 1.5rem 1rem; max-width: 1000px; width: 100%; margin: 0 auto; }
+.titre-page { font-size: 1.5rem; margin-bottom: 1.25rem; }
+
+/* On enlève l'ancien style onglets horizontal pour le remplacer par sous-menu interne */

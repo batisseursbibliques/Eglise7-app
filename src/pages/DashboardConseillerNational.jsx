@@ -5,17 +5,12 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
-export default function DashboardConseillerNational({ profil }) {
-  const [onglet, setOnglet] = useState('dossiers')
+export default function DashboardConseillerNational({ profil , page = 'dossiers'}) {
+  const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Conseiller National — M.I.M.C</h1>
-      <nav className="onglets">
-        <button className={onglet === 'dossiers' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('dossiers')}>Dossiers de conseil</button>
-        <button className={onglet === 'conflits' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('conflits')}>Gestion des conflits</button>
-        <button className={onglet === 'notes' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('notes')}>Notes confidentielles</button>
-      </nav>
       {onglet === 'dossiers' && <DossierConseil uid={profil.uid} />}
       {onglet === 'conflits' && <GestionConflits uid={profil.uid} />}
       {onglet === 'notes' && <NotesConseiller uid={profil.uid} />}

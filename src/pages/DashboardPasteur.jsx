@@ -21,9 +21,9 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardPasteur({ profil, lectureSeule = false }) {
+export default function DashboardPasteur({ profil, lectureSeule = false, page = 'caisse' }) {
   const brancheId = profil.brancheId
-  const [onglet, setOnglet] = useState('caisse')
+  const onglet = page
   const [branche, setBranche] = useState(null)
   const [mouvements, setMouvements] = useState([])
   const [membres, setMembres] = useState([])
@@ -61,22 +61,6 @@ export default function DashboardPasteur({ profil, lectureSeule = false }) {
         />
       )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'}</h1>
-
-      <nav className="onglets">
-        <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>
-        <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres</button>
-        <button className={onglet === 'cultes' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('cultes')}>Cultes</button>
-        <button className={onglet === 'departements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('departements')}>Départements</button>
-        <button className={onglet === 'communication' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('communication')}>Communication</button>
-        <button className={onglet === 'evenements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('evenements')}>Événements</button>
-        <button className={onglet === 'rapports' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapports')}>Rapports</button>
-        <button className={onglet === 'secretariat' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('secretariat')}>📋 Secrétariat</button>
-        <button className={onglet === 'tresorerie' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('tresorerie')}>💰 Trésorerie</button>
-        <button className={onglet === 'projets' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projets')}>📦 Projets</button>
-        <button className={onglet === 'messages' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('messages')}>✍️ Messages</button>
-        <button className={onglet === 'utilisateurs' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('utilisateurs')}>Utilisateurs</button>
-        <button className={onglet === 'apparence' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('apparence')}>Apparence</button>
-      </nav>
 
       {onglet === 'caisse' && (
         <CaissePasteur

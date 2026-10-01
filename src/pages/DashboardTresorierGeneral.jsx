@@ -12,20 +12,13 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardTresorierGeneral({ profil }) {
+export default function DashboardTresorierGeneral({ profil , page = 'virements'}) {
   const { user } = useAuth()
-  const [onglet, setOnglet] = useState('virements')
+  const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Trésorerie Générale du BEN — M.I.M.C</h1>
-      <nav className="onglets">
-        <button className={onglet === 'virements' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('virements')}>Virements</button>
-        <button className={onglet === 'consolidation' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('consolidation')}>Consolidation</button>
-        <button className={onglet === 'branches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('branches')}>Caisses des églises locales</button>
-        <button className={onglet === 'projetsNationaux' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsNationaux')}>Projets du BEN</button>
-        <button className={onglet === 'projetsBranches' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('projetsBranches')}>Projets des églises locales</button>
-      </nav>
       {onglet === 'virements' && <GestionVirements uid={user?.uid} />}
       {onglet === 'consolidation' && <ConsolidationFinanciere />}
       {onglet === 'branches' && <CaissesBranches />}

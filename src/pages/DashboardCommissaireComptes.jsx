@@ -12,8 +12,8 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardCommissaireComptes({ profil }) {
-  const [onglet, setOnglet] = useState('controle')
+export default function DashboardCommissaireComptes({ profil , page = 'controle'}) {
+  const onglet = page
 
   return (
     <div>
@@ -22,11 +22,6 @@ export default function DashboardCommissaireComptes({ profil }) {
         Mandat : vérification annuelle de la gestion du BEN. Rapport à déposer
         la première semaine de la nouvelle année et publié à tous les niveaux (Art. RI.37-38).
       </p>
-      <nav className="onglets">
-        <button className={onglet === 'controle' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('controle')}>Contrôle financier</button>
-        <button className={onglet === 'rapport' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('rapport')}>Rapport annuel</button>
-        <button className={onglet === 'observations' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('observations')}>Observations</button>
-      </nav>
       {onglet === 'controle' && <ControleFinancier />}
       {onglet === 'rapport' && <RapportAnnuel uid={profil.uid} />}
       {onglet === 'observations' && <ObservationsCommissaire uid={profil.uid} />}
