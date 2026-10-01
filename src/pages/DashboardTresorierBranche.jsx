@@ -10,8 +10,9 @@ const TYPES_MOUVEMENT = [
 ]
 
 import GestionProjets from './GestionProjets.jsx'
+import { BoutonAbsence } from './GestionAbsence.jsx'
 
-export default function DashboardTresorierBranche({ profil }) {
+export default function DashboardTresorierBranche({ profil, lectureSeule = false }) {
   const { brancheId, uid } = profil
   const [onglet, setOnglet] = useState('caisse')
   const [branche, setBranche] = useState(null)
@@ -45,6 +46,13 @@ export default function DashboardTresorierBranche({ profil }) {
 
   return (
     <div>
+      {!lectureSeule && (
+        <BoutonAbsence
+          roleId={`tresorier_${brancheId}`}
+          nomTitulaire={profil.nom}
+          nomAdjoint="le Trésorier Adjoint"
+        />
+      )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Trésorerie</h1>
       <nav className="onglets">
         <button className={onglet === 'caisse' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('caisse')}>Caisse</button>

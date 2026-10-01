@@ -61,19 +61,22 @@ service cloud.firestore {
 
     function estPasteurDe(brancheId) {
       return request.auth != null
-        && roleDeUid(request.auth.uid) == 'pasteur'
+        && (roleDeUid(request.auth.uid) == 'pasteur'
+            || roleDeUid(request.auth.uid) == 'pasteur_suppleant')
         && brancheDeUid(request.auth.uid) == brancheId;
     }
 
     function estSecretaireDe(brancheId) {
       return request.auth != null
-        && roleDeUid(request.auth.uid) == 'secretaire'
+        && (roleDeUid(request.auth.uid) == 'secretaire'
+            || roleDeUid(request.auth.uid) == 'secretaire_adjoint')
         && brancheDeUid(request.auth.uid) == brancheId;
     }
 
     function estTresorierDe(brancheId) {
       return request.auth != null
-        && roleDeUid(request.auth.uid) == 'tresorier'
+        && (roleDeUid(request.auth.uid) == 'tresorier'
+            || roleDeUid(request.auth.uid) == 'tresorier_adjoint')
         && brancheDeUid(request.auth.uid) == brancheId;
     }
 

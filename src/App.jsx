@@ -17,6 +17,9 @@ import DashboardOrganisateurNational from './pages/DashboardOrganisateurNational
 import DashboardConseillerNational from './pages/DashboardConseillerNational.jsx'
 import DashboardCommissaireComptes from './pages/DashboardCommissaireComptes.jsx'
 import { BoutonAbsence } from './pages/GestionAbsence.jsx'
+import DashboardPasteurSuppleant from './pages/DashboardPasteurSuppleant.jsx'
+import DashboardSecretaireAdjoint from './pages/DashboardSecretaireAdjoint.jsx'
+import DashboardTresorierAdjoint from './pages/DashboardTresorierAdjoint.jsx'
 
 // Wrapper du dashboard national avec le bouton d'absence pour le Vice-Président
 function DashboardNationalAvecAbsence({ profil }) {
@@ -33,7 +36,7 @@ function DashboardNationalAvecAbsence({ profil }) {
 }
 import NotificationsBell from './pages/NotificationsBell.jsx'
 
-const ROLES_CONNUS = ['national', 'admin', 'vice_president', 'organisateur_national', 'conseiller_national', 'commissaire_comptes', 'pasteur', 'departement', 'secretaire', 'tresorier', 'secretaire_general', 'tresorier_general']
+const ROLES_CONNUS = ['national', 'admin', 'vice_president', 'organisateur_national', 'conseiller_national', 'commissaire_comptes', 'pasteur', 'pasteur_suppleant', 'departement', 'secretaire', 'secretaire_adjoint', 'tresorier', 'tresorier_adjoint', 'secretaire_general', 'tresorier_general']
 
 function Contenu() {
   const { user, profil, chargement, deconnexion } = useAuth()
@@ -74,8 +77,11 @@ function Contenu() {
     secretaire_general: 'Secrétariat Général du BEN',
     tresorier_general: 'Trésorerie Générale du BEN',
     pasteur: 'Pastorale — Pasteur Responsable',
+    pasteur_suppleant: 'Pastorale — Pasteur Suppléant',
     secretaire: 'Secrétariat Local',
+    secretaire_adjoint: 'Secrétariat Local — Adjoint',
     tresorier: 'Trésorerie Locale',
+    tresorier_adjoint: 'Trésorerie Locale — Adjoint',
     departement: 'Responsable de Ministère',
   }[profil.role] ?? 'M.I.M.C — Espace de gestion'
 
@@ -109,9 +115,12 @@ function Contenu() {
         {profil.role === 'conseiller_national' && <DashboardConseillerNational profil={profil} />}
         {profil.role === 'commissaire_comptes' && <DashboardCommissaireComptes profil={profil} />}
         {profil.role === 'pasteur' && <DashboardPasteur profil={profil} />}
+        {profil.role === 'pasteur_suppleant' && <DashboardPasteurSuppleant profil={profil} />}
         {profil.role === 'departement' && <DashboardDepartement profil={profil} />}
         {profil.role === 'secretaire' && <DashboardSecretaireBranche profil={profil} />}
+        {profil.role === 'secretaire_adjoint' && <DashboardSecretaireAdjoint profil={profil} />}
         {profil.role === 'tresorier' && <DashboardTresorierBranche profil={profil} />}
+        {profil.role === 'tresorier_adjoint' && <DashboardTresorierAdjoint profil={profil} />}
         {profil.role === 'secretaire_general' && <DashboardSecretaireGeneral profil={profil} />}
         {profil.role === 'tresorier_general' && <DashboardTresorierGeneral profil={profil} />}
       </main>

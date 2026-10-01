@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
-export default function DashboardSecretaireBranche({ profil }) {
+import { BoutonAbsence } from './GestionAbsence.jsx'
+
+export default function DashboardSecretaireBranche({ profil, lectureSeule = false }) {
   const { brancheId, uid } = profil
   const [onglet, setOnglet] = useState('membres')
   const [branche, setBranche] = useState(null)
@@ -13,6 +15,13 @@ export default function DashboardSecretaireBranche({ profil }) {
 
   return (
     <div>
+      {!lectureSeule && (
+        <BoutonAbsence
+          roleId={`secretaire_${brancheId}`}
+          nomTitulaire={profil.nom}
+          nomAdjoint="le Secrétaire Adjoint"
+        />
+      )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'} — Secrétariat</h1>
       <nav className="onglets">
         <button className={onglet === 'membres' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('membres')}>Membres</button>

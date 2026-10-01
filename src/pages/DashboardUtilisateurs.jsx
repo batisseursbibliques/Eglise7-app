@@ -109,11 +109,14 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
                 </optgroup>
                 <optgroup label="Branche locale">
                   <option value="pasteur">Pasteur Responsable</option>
+                  <option value="pasteur_suppleant">Pasteur Suppléant</option>
                   <option value="secretaire">Secrétaire Local</option>
+                  <option value="secretaire_adjoint">Secrétaire Adjoint</option>
                   <option value="tresorier">Trésorier Local</option>
+                  <option value="tresorier_adjoint">Trésorier Adjoint</option>
                 </optgroup>
               </select>
-              {['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && (
+              {['pasteur', 'pasteur_suppleant', 'secretaire', 'secretaire_adjoint', 'tresorier', 'tresorier_adjoint'].includes(roleCree) && (
                 <select value={brancheCible} onChange={(e) => setBrancheCible(e.target.value)} className="champ-saisie">
                   <option value="">— Choisir la branche —</option>
                   {branches.map((b) => <option key={b.id} value={b.id}>{b.nom}</option>)}
@@ -134,7 +137,7 @@ export default function DashboardUtilisateurs({ role, brancheId }) {
             className="bouton-principal"
             disabled={
               enCours
-              || (estGestionnaire && ['pasteur', 'secretaire', 'tresorier'].includes(roleCree) && !brancheCible)
+              || (estGestionnaire && ['pasteur', 'pasteur_suppleant', 'secretaire', 'secretaire_adjoint', 'tresorier', 'tresorier_adjoint'].includes(roleCree) && !brancheCible)
               || (role === 'pasteur' && !departementCible)
             }
           >

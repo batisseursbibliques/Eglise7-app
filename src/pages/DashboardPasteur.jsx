@@ -13,6 +13,7 @@ import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
 import DashboardApparence from './DashboardApparence.jsx'
 import GestionProjets from './GestionProjets.jsx'
 import GestionMessages from './GestionMessages.jsx'
+import { BoutonAbsence } from './GestionAbsence.jsx'
 const TYPES_MOUVEMENT = [
   { valeur: 'dime', label: 'Dîme' },
   { valeur: 'collecte', label: 'Collecte' },
@@ -20,7 +21,7 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardPasteur({ profil }) {
+export default function DashboardPasteur({ profil, lectureSeule = false }) {
   const brancheId = profil.brancheId
   const [onglet, setOnglet] = useState('caisse')
   const [branche, setBranche] = useState(null)
@@ -52,6 +53,13 @@ export default function DashboardPasteur({ profil }) {
 
   return (
     <div>
+      {!lectureSeule && (
+        <BoutonAbsence
+          roleId={`pasteur_${brancheId}`}
+          nomTitulaire={profil.nom}
+          nomAdjoint="le Pasteur Suppléant"
+        />
+      )}
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'}</h1>
 
       <nav className="onglets">
