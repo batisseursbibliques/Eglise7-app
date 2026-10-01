@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 
-export default function Tiroir({ ouvert, onFermer, sections, pageActive, onNaviguer, nom, role }) {
+export default function Tiroir({ ouvert, onFermer, sections, pageActive, onNaviguer, nom, role, onDeconnexion }) {
   useEffect(() => {
     if (!ouvert) return
     const handler = (e) => { if (e.key === 'Escape') onFermer() }
@@ -45,6 +45,13 @@ export default function Tiroir({ ouvert, onFermer, sections, pageActive, onNavig
             </div>
           ))}
         </div>
+        {onDeconnexion && (
+          <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.25)' }}>
+            <button className="tiroir-lien" onClick={onDeconnexion}>
+              <span className="tiroir-lien-icone">🚪</span>Se déconnecter
+            </button>
+          </div>
+        )}
       </nav>
     </>
   )

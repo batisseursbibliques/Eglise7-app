@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink, Routes, Route, useLocation } from 'react-router-dom'
 import { collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 import { LOGO_MIMC } from '../assets/logo-mimc.js'
@@ -29,13 +29,18 @@ const fmt = (d) => {
   return isNaN(dt) ? String(d) : dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function Section({ id, titre, children }) {
+function Section({ titre, children }) {
   return (
-    <section id={id} className="s-section">
+    <section className="s-section">
       <h2>{titre}</h2>
       {children}
     </section>
   )
+}
+
+function ytId(url = '') {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|shorts\/|embed\/))([\w-]{11})/)
+  return m ? m[1] : null
 }
 
 function Vide({ items, texte }) {
@@ -77,152 +82,224 @@ function Formulaire({ collectionNom, champs, bouton, merci }) {
   )
 }
 
-export default function SitePublic() {
-  const [menu, setMenu] = useState(false)
-  const evenements = useListe('siteEvenements')
-  const predications = useListe('sitePredications')
-  const actualites = useListe('siteActualites')
-  const assemblees = useListe('siteAssemblees', 50)
-  const liens = [
-    ['presentation', 'Présentation'], ['assemblees', 'Assemblées'], ['evenements', 'Événements'],
-    ['predications', 'Prédications'], ['actualites', 'Actualités'], ['priere', 'Prière'],
-    ['contact', 'Contact'], ['dons', 'Dons'],
-  ]
-  return (
-    <div className="site">
-      <header className="s-head">
-        <a href="#accueil" className="s-marque">
-          <img src={LOGO_MIMC} alt="" /> <span>M.I.M.C</span>
-        </a>
-        <button className="s-burger" onClick={() => setMenu(!menu)} aria-label="Menu">☰</button>
-        <nav className={menu ? 'ouvert' : ''}>
-          {liens.map(([id, t]) => (
-            <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>{t}</a>
-          ))}
-          <Link to="/espace" className="s-espace">Espace membres</Link>
-        </nav>
-      </header>
+const PAGES = [
+  ['/presentation', 'Présentation', 'Découvrir le ministère'],
+  ['/assemblees', 'Assemblées', 'Où nous retrouver'],
+  ['/evenements', 'Événements', 'Les rendez-vous à venir'],
+  ['/predications', 'Prédications', 'Écouter la Parole'],
+  ['/actualites', 'Actualités', 'Les nouvelles du ministère'],
+  ['/priere', 'Prière', 'Confier un sujet de prière'],
+  ['/contact', 'Contact', 'Nous écrire'],
+  ['/dons', 'Dons', 'Soutenir le ministère'],
+]
 
-      <div id="accueil" className="s-hero">
+function Accueil() {
+  return (
+    <>
+      <div className="s-hero">
         <img src={LOGO_MIMC} alt="Logo M.I.M.C" />
         <h1>Ministère d'Impact La Montagne de Consolation en Christ</h1>
         <p>Une famille de foi à Cotonou, au service de Dieu et de son prochain.</p>
         <div className="s-actions">
-          <a href="#priere" className="s-btn">Demander une prière</a>
-          <a href="#assemblees" className="s-btn s-btn-clair">Nous trouver</a>
+          <Link to="/priere" className="s-btn">Demander une prière</Link>
+          <Link to="/assemblees" className="s-btn s-btn-clair">Nous trouver</Link>
         </div>
       </div>
+      <div className="s-section s-grille">
+        {PAGES.map(([to, t, d]) => (
+          <Link key={to} to={to} className="s-carte s-tuile"><h3>{t}</h3><p>{d}</p></Link>
+        ))}
+      </div>
+    </>
+  )
+}
 
-      <Section id="presentation" titre="Qui sommes-nous">
-        <p>
-          Le M.I.M.C est un ministère chrétien dont le siège est à Akpakpa, Cotonou. Il rassemble des
-          assemblées locales autour de la Parole de Dieu, de la prière, de l'entraide et de projets
-          concrets au service des communautés.
-        </p>
-      </Section>
+function Presentation() {
+  return (
+    <Section titre="Qui sommes-nous">
+      <p>
+        Le M.I.M.C est un ministère chrétien dont le siège est à Akpakpa, Cotonou. Il rassemble des
+        assemblées locales autour de la Parole de Dieu, de la prière, de l'entraide et de projets
+        concrets au service des communautés.
+      </p>
+    </Section>
+  )
+}
 
-      <Section id="assemblees" titre="Nos assemblées">
-        <Vide items={assemblees} texte="La liste de nos assemblées sera bientôt publiée." />
-        <div className="s-grille">
-          {assemblees?.map((a) => (
-            <article key={a.id} className="s-carte">
-              <h3>{a.nom}</h3>
-              {a.ville && <p>📍 {a.ville}{a.adresse ? ` — ${a.adresse}` : ''}</p>}
-              {a.horaires && <p>🕘 {a.horaires}</p>}
-              {a.contact && <p>📞 {a.contact}</p>}
-            </article>
-          ))}
-        </div>
-      </Section>
+function Assemblees() {
+  const items = useListe('siteAssemblees', 50)
+  return (
+    <Section titre="Nos assemblées">
+      <Vide items={items} texte="La liste de nos assemblées sera bientôt publiée." />
+      <div className="s-grille">
+        {items?.map((a) => (
+          <article key={a.id} className="s-carte">
+            <h3>{a.nom}</h3>
+            {a.ville && <p>📍 {a.ville}{a.adresse ? ` — ${a.adresse}` : ''}</p>}
+            {a.horaires && <p>🕘 {a.horaires}</p>}
+            {a.contact && <p>📞 {a.contact}</p>}
+          </article>
+        ))}
+      </div>
+    </Section>
+  )
+}
 
-      <Section id="evenements" titre="Événements">
-        <Vide items={evenements} texte="Aucun événement annoncé pour le moment." />
-        <div className="s-grille">
-          {evenements?.map((e) => (
-            <article key={e.id} className="s-carte">
-              <small>{fmt(e.date)}</small>
-              <h3>{e.titre}</h3>
-              {e.lieu && <p>📍 {e.lieu}</p>}
-              {e.description && <p>{e.description}</p>}
-            </article>
-          ))}
-        </div>
-      </Section>
+function Evenements() {
+  const items = useListe('siteEvenements')
+  return (
+    <Section titre="Événements">
+      <Vide items={items} texte="Aucun événement annoncé pour le moment." />
+      <div className="s-grille">
+        {items?.map((e) => (
+          <article key={e.id} className="s-carte">
+            <small>{fmt(e.date)}</small>
+            <h3>{e.titre}</h3>
+            {e.lieu && <p>📍 {e.lieu}</p>}
+            {e.description && <p>{e.description}</p>}
+          </article>
+        ))}
+      </div>
+    </Section>
+  )
+}
 
-      <Section id="predications" titre="Prédications">
-        <Vide items={predications} texte="Les prédications seront bientôt disponibles." />
-        <div className="s-grille">
-          {predications?.map((p) => (
+function Predications() {
+  const items = useListe('sitePredications')
+  return (
+    <Section titre="Prédications">
+      <Vide items={items} texte="Les prédications seront bientôt disponibles." />
+      <div className="s-grille">
+        {items?.map((p) => {
+          const id = ytId(p.lien)
+          return (
             <article key={p.id} className="s-carte">
               <small>{fmt(p.date)}{p.orateur ? ` · ${p.orateur}` : ''}</small>
               <h3>{p.titre}</h3>
+              {id && (
+                <div className="s-video">
+                  <iframe src={`https://www.youtube.com/embed/${id}`} title={p.titre} loading="lazy"
+                    allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen />
+                </div>
+              )}
               {p.resume && <p>{p.resume}</p>}
-              {p.lien && <a className="s-lien" href={p.lien} target="_blank" rel="noopener noreferrer">Écouter / regarder →</a>}
+              {p.lien && !id && <a className="s-lien" href={p.lien} target="_blank" rel="noopener noreferrer">Écouter / regarder →</a>}
+            </article>
+          )
+        })}
+      </div>
+    </Section>
+  )
+}
+
+function Actualites() {
+  const items = useListe('siteActualites')
+  return (
+    <Section titre="Actualités">
+      <Vide items={items} texte="Pas encore d'actualité publiée." />
+      {items?.map((a) => (
+        <article key={a.id} className="s-carte s-large">
+          <small>{fmt(a.date)}</small>
+          <h3>{a.titre}</h3>
+          <p style={{ whiteSpace: 'pre-line' }}>{a.contenu}</p>
+        </article>
+      ))}
+    </Section>
+  )
+}
+
+function Priere() {
+  return (
+    <Section titre="Demande de prière">
+      <p>Confiez-nous votre sujet de prière. Il sera transmis à l'équipe pastorale.</p>
+      <Formulaire
+        collectionNom="demandesPriere"
+        bouton="Envoyer ma demande"
+        merci="Votre demande a bien été reçue. Nous prions avec vous."
+        champs={[
+          { nom: 'nom', label: 'Votre nom (facultatif)' },
+          { nom: 'contact', label: 'Téléphone ou e-mail (facultatif)' },
+          { nom: 'message', label: 'Votre sujet de prière', type: 'textarea', requis: true },
+        ]}
+      />
+    </Section>
+  )
+}
+
+function Contact() {
+  return (
+    <Section titre="Nous contacter">
+      <ul className="s-contact">
+        <li>📍 {CONFIG.adresse}</li>
+        {CONFIG.telephone && <li>📞 {CONFIG.telephone}</li>}
+        {CONFIG.whatsapp && <li><a href={`https://wa.me/${CONFIG.whatsapp}`}>WhatsApp</a></li>}
+        {CONFIG.email && <li>✉️ {CONFIG.email}</li>}
+      </ul>
+      <Formulaire
+        collectionNom="messagesContact"
+        bouton="Envoyer le message"
+        merci="Message envoyé. Nous vous répondrons dès que possible."
+        champs={[
+          { nom: 'nom', label: 'Votre nom', requis: true },
+          { nom: 'contact', label: 'Téléphone ou e-mail', requis: true },
+          { nom: 'message', label: 'Votre message', type: 'textarea', requis: true },
+        ]}
+      />
+    </Section>
+  )
+}
+
+function Dons() {
+  return (
+    <Section titre="Soutenir le ministère">
+      <p>Chaque don aide à financer les projets et les actions d'entraide du ministère.</p>
+      {CONFIG.dons.length === 0 ? (
+        <p className="s-note">Les moyens de don seront publiés ici. En attendant, contactez-nous.</p>
+      ) : (
+        <div className="s-grille">
+          {CONFIG.dons.map((d, i) => (
+            <article key={i} className="s-carte">
+              <h3>{d.moyen}</h3>
+              <p><strong>{d.numero}</strong></p>
+              {d.nom && <p>{d.nom}</p>}
             </article>
           ))}
         </div>
-      </Section>
+      )}
+    </Section>
+  )
+}
 
-      <Section id="actualites" titre="Actualités">
-        <Vide items={actualites} texte="Pas encore d'actualité publiée." />
-        {actualites?.map((a) => (
-          <article key={a.id} className="s-carte s-large">
-            <small>{fmt(a.date)}</small>
-            <h3>{a.titre}</h3>
-            <p style={{ whiteSpace: 'pre-line' }}>{a.contenu}</p>
-          </article>
-        ))}
-      </Section>
+export default function SitePublic() {
+  const [menu, setMenu] = useState(false)
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0); setMenu(false) }, [pathname])
+  return (
+    <div className="site">
+      <header className="s-head">
+        <Link to="/" className="s-marque">
+          <img src={LOGO_MIMC} alt="" /> <span>M.I.M.C</span>
+        </Link>
+        <button className="s-burger" onClick={() => setMenu(!menu)} aria-label="Menu">☰</button>
+        <nav className={menu ? 'ouvert' : ''}>
+          <NavLink to="/" end>Accueil</NavLink>
+          {PAGES.map(([to, t]) => <NavLink key={to} to={to}>{t}</NavLink>)}
+          <Link to="/espace" className="s-espace">Espace membres</Link>
+        </nav>
+      </header>
 
-      <Section id="priere" titre="Demande de prière">
-        <p>Confiez-nous votre sujet de prière. Il sera transmis à l'équipe pastorale.</p>
-        <Formulaire
-          collectionNom="demandesPriere"
-          bouton="Envoyer ma demande"
-          merci="Votre demande a bien été reçue. Nous prions avec vous."
-          champs={[
-            { nom: 'nom', label: 'Votre nom (facultatif)' },
-            { nom: 'contact', label: 'Téléphone ou e-mail (facultatif)' },
-            { nom: 'message', label: 'Votre sujet de prière', type: 'textarea', requis: true },
-          ]}
-        />
-      </Section>
-
-      <Section id="contact" titre="Nous contacter">
-        <ul className="s-contact">
-          <li>📍 {CONFIG.adresse}</li>
-          {CONFIG.telephone && <li>📞 {CONFIG.telephone}</li>}
-          {CONFIG.whatsapp && <li><a href={`https://wa.me/${CONFIG.whatsapp}`}>WhatsApp</a></li>}
-          {CONFIG.email && <li>✉️ {CONFIG.email}</li>}
-        </ul>
-        <Formulaire
-          collectionNom="messagesContact"
-          bouton="Envoyer le message"
-          merci="Message envoyé. Nous vous répondrons dès que possible."
-          champs={[
-            { nom: 'nom', label: 'Votre nom', requis: true },
-            { nom: 'contact', label: 'Téléphone ou e-mail', requis: true },
-            { nom: 'message', label: 'Votre message', type: 'textarea', requis: true },
-          ]}
-        />
-      </Section>
-
-      <Section id="dons" titre="Soutenir le ministère">
-        <p>Chaque don aide à financer les projets et les actions d'entraide du ministère.</p>
-        {CONFIG.dons.length === 0 ? (
-          <p className="s-note">Les moyens de don seront publiés ici. En attendant, contactez-nous.</p>
-        ) : (
-          <div className="s-grille">
-            {CONFIG.dons.map((d, i) => (
-              <article key={i} className="s-carte">
-                <h3>{d.moyen}</h3>
-                <p><strong>{d.numero}</strong></p>
-                {d.nom && <p>{d.nom}</p>}
-              </article>
-            ))}
-          </div>
-        )}
-      </Section>
+      <Routes>
+        <Route path="/" element={<Accueil />} />
+        <Route path="/presentation" element={<Presentation />} />
+        <Route path="/assemblees" element={<Assemblees />} />
+        <Route path="/evenements" element={<Evenements />} />
+        <Route path="/predications" element={<Predications />} />
+        <Route path="/actualites" element={<Actualites />} />
+        <Route path="/priere" element={<Priere />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/dons" element={<Dons />} />
+        <Route path="*" element={<Accueil />} />
+      </Routes>
 
       <footer className="s-pied">
         © {new Date().getFullYear()} M.I.M.C — Cotonou, Bénin · <Link to="/espace">Espace membres</Link>

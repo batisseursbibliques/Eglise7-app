@@ -277,6 +277,7 @@ function Contenu() {
         onNaviguer={setPageActive}
         nom={profil.nom}
         role={labelRole}
+        onDeconnexion={deconnexion}
       />
 
       {/* Contenu */}
