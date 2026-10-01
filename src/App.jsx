@@ -42,6 +42,7 @@ const SECTIONS_PAR_ROLE = {
       liens: [
         { icone: '👥', texte: 'Utilisateurs', page: 'utilisateurs' },
         { icone: '📣', texte: 'Communication', page: 'communication' },
+        { icone: '🌐', texte: 'Site public', page: 'site' },
         { icone: '🎨', texte: 'Apparence', page: 'apparence' },
       ],
     },

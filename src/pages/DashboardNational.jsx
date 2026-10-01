@@ -11,6 +11,7 @@ import GestionProjets from './GestionProjets.jsx'
 import VueMessagesPresident from './VueMessagesPresident.jsx'
 import GestionMessages from './GestionMessages.jsx'
 import DashboardUtilisateurs from './DashboardUtilisateurs.jsx'
+import GestionSite from './GestionSite.jsx'
 
 export default function DashboardNational({ page = 'vue', deconnexion }) {
   const { user, profil } = useAuth()
@@ -89,6 +90,8 @@ export default function DashboardNational({ page = 'vue', deconnexion }) {
       {onglet === 'utilisateurs' && (
         <DashboardUtilisateurs role="national" />
       )}
+
+      {onglet === 'site' && <GestionSite />}
 
       {onglet === 'communication' && (
         <DashboardCommunication uid={user.uid} peutPublierNational={true} />

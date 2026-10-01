@@ -282,5 +282,28 @@ service cloud.firestore {
         allow write: if estNational() || estTresorierGeneral();
       }
     }
+    // ── Site public : lecture libre, écriture par le Président ────────────────
+    match /siteActualites/{id} { allow read: if true; allow write: if estNational(); }
+    match /siteEvenements/{id} { allow read: if true; allow write: if estNational(); }
+    match /sitePredications/{id} { allow read: if true; allow write: if estNational(); }
+    match /siteAssemblees/{id} { allow read: if true; allow write: if estNational(); }
+
+    // ── Formulaires publics : création libre (champs bornés), lecture par le bureau
+    match /demandesPriere/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['nom','contact','message','date','traite'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
+        && request.resource.data.traite == false;
+      allow read, update: if estNational() || estSecretaireGeneral();
+      allow delete: if false;
+    }
+    match /messagesContact/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['nom','contact','message','date','traite'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
+        && request.resource.data.traite == false;
+      allow read, update: if estNational() || estSecretaireGeneral();
+      allow delete: if false;
+    }
   }
 }
