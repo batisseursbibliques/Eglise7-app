@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, NavLink, Routes, Route, useLocation } from 'react-router-dom'
+import { Link, NavLink, Routes, Route, useLocation, useParams } from 'react-router-dom'
 import { collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 import { LOGO_MIMC } from '../assets/logo-mimc.js'
@@ -7,10 +7,10 @@ import './site.css'
 
 // À renseigner par Paul : coordonnées publiques et moyens de don
 const CONFIG = {
-  email: '',
-  telephone: '',
-  whatsapp: '',
-  adresse: 'Akpakpa, Cotonou, Bénin',
+  email: 'triomphateur777@gmail.com',
+  telephones: ['+229 96 84 59 27', '+229 65 59 51 82', '+229 97 03 85 84'],
+  whatsapp: '22996845927',
+  adresse: 'Quartier Kowégbo, Maison KOKOYE Armand, Lot 781, Akpakpa, Cotonou — République du Bénin',
   dons: [], // ex. { moyen: 'MTN MoMo', numero: '...', nom: '...' }
 }
 
@@ -79,50 +79,6 @@ function Formulaire({ collectionNom, champs, bouton, merci }) {
       {etat === 'ok' && <p className="s-ok">{merci}</p>}
       {etat === 'erreur' && <p className="s-err">L'envoi a échoué. Réessayez dans un instant.</p>}
     </form>
-  )
-}
-
-const PAGES = [
-  ['/presentation', 'Présentation', 'Découvrir le ministère'],
-  ['/assemblees', 'Assemblées', 'Où nous retrouver'],
-  ['/evenements', 'Événements', 'Les rendez-vous à venir'],
-  ['/predications', 'Prédications', 'Écouter la Parole'],
-  ['/actualites', 'Actualités', 'Les nouvelles du ministère'],
-  ['/priere', 'Prière', 'Confier un sujet de prière'],
-  ['/contact', 'Contact', 'Nous écrire'],
-  ['/dons', 'Dons', 'Soutenir le ministère'],
-]
-
-function Accueil() {
-  return (
-    <>
-      <div className="s-hero">
-        <img src={LOGO_MIMC} alt="Logo M.I.M.C" />
-        <h1>Ministère d'Impact La Montagne de Consolation en Christ</h1>
-        <p>Une famille de foi à Cotonou, au service de Dieu et de son prochain.</p>
-        <div className="s-actions">
-          <Link to="/priere" className="s-btn">Demander une prière</Link>
-          <Link to="/assemblees" className="s-btn s-btn-clair">Nous trouver</Link>
-        </div>
-      </div>
-      <div className="s-section s-grille">
-        {PAGES.map(([to, t, d]) => (
-          <Link key={to} to={to} className="s-carte s-tuile"><h3>{t}</h3><p>{d}</p></Link>
-        ))}
-      </div>
-    </>
-  )
-}
-
-function Presentation() {
-  return (
-    <Section titre="Qui sommes-nous">
-      <p>
-        Le M.I.M.C est un ministère chrétien dont le siège est à Akpakpa, Cotonou. Il rassemble des
-        assemblées locales autour de la Parole de Dieu, de la prière, de l'entraide et de projets
-        concrets au service des communautés.
-      </p>
-    </Section>
   )
 }
 
@@ -231,9 +187,9 @@ function Contact() {
     <Section titre="Nous contacter">
       <ul className="s-contact">
         <li>📍 {CONFIG.adresse}</li>
-        {CONFIG.telephone && <li>📞 {CONFIG.telephone}</li>}
+        {CONFIG.telephones.map((t) => <li key={t}>📞 <a href={`tel:${t.replace(/\s/g, '')}`}>{t}</a></li>)}
         {CONFIG.whatsapp && <li><a href={`https://wa.me/${CONFIG.whatsapp}`}>WhatsApp</a></li>}
-        {CONFIG.email && <li>✉️ {CONFIG.email}</li>}
+        {CONFIG.email && <li>✉️ <a href={`mailto:${CONFIG.email}`}>{CONFIG.email}</a></li>}
       </ul>
       <Formulaire
         collectionNom="messagesContact"
@@ -270,6 +226,178 @@ function Dons() {
   )
 }
 
+const MINISTERES = [
+  ['evangelisation', 'Évangélisation', '📣', 'Porter l\'Évangile au-delà des murs de l\'Église.'],
+  ['ecole-biblique', 'École biblique', '📖', 'Enseigner la Parole et former des serviteurs.'],
+  ['jeunesse', 'Jeunesse', '🧑‍🤝‍🧑', 'Accompagner les jeunes dans leur foi et leur avenir.'],
+  ['femmes', 'Femmes', '👩', 'Un espace de prière, de partage et de croissance.'],
+  ['enfants', 'Enfants', '🧒', 'Enseigner aux plus petits à connaître Jésus.'],
+  ['louange', 'Louange & adoration', '🎵', 'Adorer Dieu en esprit et en vérité.'],
+  ['action-sociale', 'Action sociale', '🤝', 'Servir les personnes dans le besoin.'],
+  ['conferences', 'Conférences & séminaires', '🎤', 'Des temps de formation et d\'enseignement.'],
+]
+const PILIERS = [
+  ['Évangéliser', '🌍', 'Porter l\'Évangile au-delà des murs de l\'Église.'],
+  ['Former', '📖', 'Former des disciples et préparer des serviteurs de Dieu.'],
+  ['Bâtir', '🏛️', 'Accompagner les personnes dans leur croissance spirituelle.'],
+  ['Impacter', '💛', 'Contribuer au bien-être social, à l\'éducation, à la santé et à la réduction de la pauvreté.'],
+]
+const NAV = [
+  ['/notre-eglise', 'Notre Église'], ['/ministeres', 'Ministères'], ['/evenements', 'Événements'],
+  ['/medias', 'Médias'], ['/actualites', 'Actualités'], ['/contact', 'Contact'],
+]
+
+function useProchains(n = 3) {
+  const [items, setItems] = useState(null)
+  useEffect(() => {
+    const q = query(collection(db, 'siteEvenements'), orderBy('date', 'asc'))
+    return onSnapshot(q, (sn) => {
+      const auj = new Date().toISOString().slice(0, 10)
+      setItems(sn.docs.map((d) => ({ id: d.id, ...d.data() })).filter((e) => (e.date || '') >= auj).slice(0, n))
+    }, () => setItems([]))
+  }, [n])
+  return items
+}
+
+const MOIS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC']
+
+function Accueil() {
+  const prochains = useProchains()
+  return (
+    <>
+      <div className="s-hero">
+        <small>BIENVENUE AU</small>
+        <h1>Ministère d'Impact La Montagne de Consolation en Christ <span>MIMC</span></h1>
+        <p className="s-cite">« Prêcher l'Évangile de Jésus-Christ à travers le monde et bâtir des vies pour Sa gloire. »</p>
+        <div className="s-actions">
+          <Link to="/contact" className="s-btn">Nous rejoindre →</Link>
+          <Link to="/notre-eglise" className="s-btn s-btn-clair">Découvrir le MIMC</Link>
+        </div>
+        <p className="s-verset">« Allez, faites de toutes les nations des disciples… » — Matthieu 28:19</p>
+      </div>
+
+      <div className="s-bloc s-deux">
+        <div>
+          <small className="s-sur">BIENVENUE AU MIMC</small>
+          <h2>Une communauté appelée à annoncer Christ et à bâtir des vies.</h2>
+          <p>Le Ministère d'Impact La Montagne de Consolation en Christ est une communauté chrétienne engagée dans la proclamation de l'Évangile, la formation des disciples et l'édification des vies.</p>
+          <p>Notre désir est de voir des hommes et des femmes connaître Christ, grandir dans la foi, servir selon leur appel et devenir, à leur tour, des instruments d'impact dans leur génération.</p>
+          <Link to="/notre-eglise" className="s-btn s-btn-contour">En savoir plus →</Link>
+        </div>
+        <div className="s-vision">
+          <small className="s-sur">NOTRE VISION</small>
+          <h3>Prêcher Christ. Former des disciples. Bâtir des vies. Impacter les générations.</h3>
+          <div className="s-piliers">
+            {PILIERS.map(([t, i, d]) => (
+              <div key={t}><span>{i}</span><strong>{t.toUpperCase()}</strong><p>{d}</p></div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="s-fond"><Fondateur /></div>
+
+      <div className="s-bloc">
+        <h2>Nos ministères</h2>
+        <p className="s-note">Des services pour tous les âges et toutes les générations.</p>
+        <div className="s-min">
+          {MINISTERES.map(([slug, t, i]) => (
+            <Link key={slug} to={`/ministeres/${slug}`} className="s-carte s-mini"><span>{i}</span>{t}</Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="s-bloc s-deux">
+        <div className="s-events">
+          <h2>Prochains événements</h2>
+          {prochains === null && <p>Chargement…</p>}
+          {prochains?.length === 0 && <p>Les prochains événements seront annoncés ici.</p>}
+          {prochains?.map((e) => {
+            const d = new Date(e.date)
+            return (
+              <div key={e.id} className="s-event">
+                <div className="s-jour"><b>{d.getDate()}</b>{MOIS[d.getMonth()]}</div>
+                <div><strong>{e.titre}</strong>{e.lieu && <p>📍 {e.lieu}</p>}</div>
+              </div>
+            )
+          })}
+          <Link to="/evenements" className="s-lien-clair">Voir tous les événements →</Link>
+        </div>
+        <div className="s-ecoute">
+          <h2>Nous sommes à votre écoute</h2>
+          <p>Vous souhaitez nous contacter, demander une prière, obtenir des informations ou échanger avec l'équipe pastorale ?</p>
+          <div className="s-actions" style={{ justifyContent: 'flex-start' }}>
+            <Link to="/priere" className="s-btn">🙏 Demande de prière</Link>
+            <Link to="/contact" className="s-btn s-btn-contour">✉️ Nous contacter</Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="s-bandeau">
+        <h2>Jésus-Christ transforme des vies.</h2>
+        <p>Nous sommes appelés à les accompagner, les former et les bâtir pour Sa gloire.</p>
+        <Link to="/contact" className="s-btn">Rejoignez-nous →</Link>
+      </div>
+    </>
+  )
+}
+
+function Fondateur() {
+  return (
+    <div className="s-bloc s-deux s-fondateur" id="fondateur">
+      <img src="/images/fondateur.jpg" alt="Apôtre Prosper SAGBOHAN et son épouse" />
+      <div>
+        <small className="s-sur">LE FONDATEUR</small>
+        <h2>Apôtre Prosper SAGBOHAN</h2>
+        <h3>Fondateur &amp; Président du MIMC</h3>
+        <p>Le visionnaire du MIMC, Apôtre Prosper SAGBOHAN, est un serviteur de Dieu passionné par l'Évangile et la transformation des vies. À travers son ministère, il a reçu la vision de fonder le MIMC pour impacter les nations par la prédication de la Parole, la formation des disciples et les œuvres de bienfaisance.</p>
+      </div>
+    </div>
+  )
+}
+
+function NotreEglise() {
+  return (
+    <>
+      <Section titre="Notre Église">
+        <p>Le Ministère d'Impact La Montagne de Consolation en Christ est une communauté chrétienne dont le siège est à Akpakpa, Cotonou. Elle est engagée dans la proclamation de l'Évangile, la formation des disciples et l'édification des vies.</p>
+        <h3>Notre vision</h3>
+        <p>Prêcher Christ. Former des disciples. Bâtir des vies. Impacter les générations.</p>
+        <div className="s-grille">
+          {PILIERS.map(([t, i, d]) => (<article key={t} className="s-carte"><h3>{i} {t}</h3><p>{d}</p></article>))}
+        </div>
+      </Section>
+      <Fondateur />
+      <Assemblees />
+    </>
+  )
+}
+
+function Ministeres() {
+  return (
+    <Section titre="Nos ministères">
+      <div className="s-grille">
+        {MINISTERES.map(([slug, t, i, d]) => (
+          <Link key={slug} to={`/ministeres/${slug}`} className="s-carte s-tuile"><h3>{i} {t}</h3><p>{d}</p></Link>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+function Ministere() {
+  const { slug } = useParams()
+  const m = MINISTERES.find((x) => x[0] === slug)
+  if (!m) return <Ministeres />
+  return (
+    <Section titre={`${m[2]} ${m[1]}`}>
+      <p>{m[3]}</p>
+      <p className="s-note">Les informations détaillées de ce ministère seront bientôt publiées.</p>
+      <Link to="/ministeres" className="s-lien">← Tous les ministères</Link>
+    </Section>
+  )
+}
+
 export default function SitePublic() {
   const [menu, setMenu] = useState(false)
   const { pathname } = useLocation()
@@ -278,22 +406,24 @@ export default function SitePublic() {
     <div className="site">
       <header className="s-head">
         <Link to="/" className="s-marque">
-          <img src={LOGO_MIMC} alt="" /> <span>M.I.M.C</span>
+          <img src={LOGO_MIMC} alt="" /> <span>MIMC</span>
         </Link>
         <button className="s-burger" onClick={() => setMenu(!menu)} aria-label="Menu">☰</button>
         <nav className={menu ? 'ouvert' : ''}>
           <NavLink to="/" end>Accueil</NavLink>
-          {PAGES.map(([to, t]) => <NavLink key={to} to={to}>{t}</NavLink>)}
+          {NAV.map(([to, t]) => <NavLink key={to} to={to}>{t}</NavLink>)}
+          <Link to="/dons" className="s-don">Faire un don</Link>
           <Link to="/espace" className="s-espace">Espace membres</Link>
         </nav>
       </header>
 
       <Routes>
         <Route path="/" element={<Accueil />} />
-        <Route path="/presentation" element={<Presentation />} />
-        <Route path="/assemblees" element={<Assemblees />} />
+        <Route path="/notre-eglise" element={<NotreEglise />} />
+        <Route path="/ministeres" element={<Ministeres />} />
+        <Route path="/ministeres/:slug" element={<Ministere />} />
         <Route path="/evenements" element={<Evenements />} />
-        <Route path="/predications" element={<Predications />} />
+        <Route path="/medias" element={<Predications />} />
         <Route path="/actualites" element={<Actualites />} />
         <Route path="/priere" element={<Priere />} />
         <Route path="/contact" element={<Contact />} />
@@ -302,7 +432,22 @@ export default function SitePublic() {
       </Routes>
 
       <footer className="s-pied">
-        © {new Date().getFullYear()} M.I.M.C — Cotonou, Bénin · <Link to="/espace">Espace membres</Link>
+        <div>
+          <strong>MIMC</strong>
+          <p>Ministère d'Impact La Montagne de Consolation en Christ</p>
+        </div>
+        <div>
+          <strong>Siège social</strong>
+          <p>{CONFIG.adresse}</p>
+          <p>{CONFIG.telephones.join(' · ')}</p>
+          <p>{CONFIG.email}</p>
+        </div>
+        <div>
+          <strong>Liens utiles</strong>
+          {NAV.map(([to, t]) => <Link key={to} to={to}>{t}</Link>)}
+          <Link to="/espace">Espace membres</Link>
+        </div>
+        <p className="s-copy">© {new Date().getFullYear()} MIMC — Tous droits réservés</p>
       </footer>
     </div>
   )
