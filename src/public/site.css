@@ -87,3 +87,5 @@ html { scroll-behavior:smooth; scroll-padding-top:64px; }
   .s-hero h1 { max-width:40rem; }
   .s-head nav { align-items:center; }
 }
+
+.s-hero { background:linear-gradient(100deg,rgba(74,11,22,.92) 0%,rgba(110,18,35,.72) 55%,rgba(74,11,22,.5) 100%),url(/images/banniere.jpg) center/cover no-repeat; }
