@@ -7,16 +7,16 @@ service cloud.firestore {
     // On ajoute ici chaque UID après création du compte.
     function roleDeUid(uid) {
       return {
-        "BHxWbDUWzENR32EGkZyhCIrWvsw1": "national",
-        "wMSZpdOyttbZegS9TtwqlhcLYYA2": "pasteur"
-        // Nouveaux comptes BEN ajoutés ici après création
+        "jmrLfFxdstUtmTkjUGopq3JmzIo2": "national"
+        // Nouveaux comptes ajoutés ici après création
       }[uid];
     }
 
     // Table statique des branches pour pasteurs, secrétaires et trésoriers locaux
     function brancheDeUid(uid) {
       return {
-        "wMSZpdOyttbZegS9TtwqlhcLYYA2": "PdgWgoh95wJE1numTva7"
+        "_": "_"
+        // Branches : "UID": "idDeLaBranche"
       }[uid];
     }
 
