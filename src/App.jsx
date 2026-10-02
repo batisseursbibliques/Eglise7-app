@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from './lib/firebase.js'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import ChangerMotDePasse from './components/ChangerMotDePasse.jsx'
 import { LOGO_MIMC } from './assets/logo-mimc.js'
 import Tiroir from './components/Tiroir.jsx'
 
@@ -203,6 +204,7 @@ function Contenu() {
   const { user, profil, chargement, deconnexion } = useAuth()
   const [tiroirOuvert, setTiroirOuvert] = useState(false)
   const [pageActive, setPageActive] = useState(null)
+  const [mdpOuvert, setMdpOuvert] = useState(false)
 
   // Page par défaut selon le rôle
   useEffect(() => {
@@ -278,11 +280,13 @@ function Contenu() {
         nom={profil.nom}
         role={labelRole}
         onDeconnexion={deconnexion}
+        onChangerMdp={() => setMdpOuvert(true)}
       />
 
       {/* Contenu */}
       <main className="contenu">
         <PageContenu profil={profil} pageActive={pageActive} deconnexion={deconnexion} />
+        {mdpOuvert && <ChangerMotDePasse onFermer={() => setMdpOuvert(false)} />}
       </main>
     </div>
   )
