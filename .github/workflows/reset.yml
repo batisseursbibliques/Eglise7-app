@@ -48,8 +48,8 @@ jobs:
             if (ids.length) { await auth.deleteUsers(ids); n += ids.length }
           } while (page.users.length === 1000)
           console.log('Comptes supprimés :', n)
-          // 2. Données (le contenu du site public est conservé)
-          const GARDER = (id) => id.startsWith('site') || id === 'demandesPriere' || id === 'messagesContact'
+          // 2. Données (seul le contenu du site public est conservé)
+          const GARDER = (id) => id.startsWith('site')
           for (const c of await db.listCollections()) {
             if (GARDER(c.id)) { console.log('Conservé :', c.id); continue }
             await db.recursiveDelete(c)
