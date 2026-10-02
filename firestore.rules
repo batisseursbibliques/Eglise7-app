@@ -3,21 +3,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Table statique des rôles ──────────────────────────────────────────────
-    // On ajoute ici chaque UID après création du compte.
-    function roleDeUid(uid) {
-      return {
-        "jmrLfFxdstUtmTkjUGopq3JmzIo2": "national"
-        // Nouveaux comptes ajoutés ici après création
-      }[uid];
+    // ── Rôles lus dans la fiche de l'utilisateur (collection utilisateurs) ────
+    // Plus besoin d'ajouter des UID ici : le Président crée les comptes dans l'application.
+    // Seuls le Président et l'admin peuvent modifier une fiche (voir plus bas).
+    // L'UID ci-dessous est un accès de secours permanent pour le Président National.
+    function ficheExiste(uid) {
+      return exists(/databases/$(database)/documents/utilisateurs/$(uid));
     }
 
-    // Table statique des branches pour pasteurs, secrétaires et trésoriers locaux
+    function roleDeUid(uid) {
+      return uid == "jmrLfFxdstUtmTkjUGopq3JmzIo2" ? "national"
+        : (ficheExiste(uid)
+            ? get(/databases/$(database)/documents/utilisateurs/$(uid)).data.get('role', null)
+            : null);
+    }
+
     function brancheDeUid(uid) {
-      return {
-        "_": "_"
-        // Branches : "UID": "idDeLaBranche"
-      }[uid];
+      return ficheExiste(uid)
+        ? get(/databases/$(database)/documents/utilisateurs/$(uid)).data.get('brancheId', null)
+        : null;
     }
 
     // ── Fonctions de rôle ─────────────────────────────────────────────────────
