@@ -1,3 +1,4 @@
+import { VERSIONS, lireVersets } from '../lib/bible.js'
 import React, { useEffect, useState, useRef } from 'react'
 import {
   collection, addDoc, onSnapshot, orderBy, query, doc,
@@ -9,14 +10,14 @@ import { db } from '../lib/firebase.js'
 // Utilitaire : détecte les références bibliques dans un texte et les rend
 // cliquables. Format reconnu : Jean 3:16 / Ps 23:1-3 / Matthieu 5:3,6
 // ─────────────────────────────────────────────────────────────────────────────
-const REGEX_VERSET = /\b([1-3]?\s?[A-ZÉÀa-zé]{2,}[a-zéèàù]*\.?\s+\d+\s*:\s*\d+(?:[–\-,]\d+)?)/g
+const REGEX_VERSET = /(?<![\p{L}\d])([1-3]?\s?\p{L}{2,}(?:\s+(?:des|de|du)\s+\p{L}+)?\.?\s*\d+\s*:\s*\d+(?:\s*[–\-,]\s*\d+)*)/gu
 
 function TexteAvecVersets({ texte, onVersetClick }) {
   if (!texte) return null
   const parties = []
   let dernier = 0
   let match
-  const re = new RegExp(REGEX_VERSET.source, 'g')
+  const re = new RegExp(REGEX_VERSET.source, 'gu')
   while ((match = re.exec(texte)) !== null) {
     if (match.index > dernier) parties.push({ type: 'texte', val: texte.slice(dernier, match.index) })
     parties.push({ type: 'verset', val: match[0] })
@@ -50,40 +51,25 @@ function TexteAvecVersets({ texte, onVersetClick }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Fenêtre popup verset — appelle bible-api.com (gratuit, Louis Segond + autres)
+// Fenêtre popup verset — lit la Bible intégrée (src/lib/bible.js, fichiers dans /public/bibles)
 // ─────────────────────────────────────────────────────────────────────────────
-const VERSIONS = [
-  { code: 'louis_segond', label: 'Louis Segond (1910)' },
-  { code: 'darby', label: 'Darby (FR)' },
-  { code: 'martin', label: 'Martin (1744)' },
-  { code: 'kjv', label: 'King James (EN)' },
-  { code: 'web', label: 'World English Bible' },
-]
-
-// Normalise la référence pour l'API : "Jean 3:16" → "Jean+3:16"
-function normaliserRef(ref) {
-  return ref.replace(/\s+/g, '+')
-}
-
 function PopupVerset({ reference, onFermer }) {
-  const [version, setVersion] = useState('louis_segond')
-  const [texte, setTexte] = useState('')
-  const [chargement, setChargement] = useState(false)
-  const [erreur, setErreur] = useState(false)
+  const [version, setVersion] = useState('lsg')
+  const [resultat, setResultat] = useState(null)
+  const [chargement, setChargement] = useState(true)
+  const [erreur, setErreur] = useState('')
 
   useEffect(() => {
-    setChargement(true)
-    setErreur(false)
-    setTexte('')
-    const ref = normaliserRef(reference)
-    fetch(`https://bible-api.com/${ref}?translation=${version}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) { setErreur(true); setChargement(false); return }
-        setTexte(data.text?.trim() ?? '')
+    let actif = true
+    setChargement(true); setErreur(''); setResultat(null)
+    lireVersets(reference, version)
+      .then((r) => {
+        if (!actif) return
+        if (r.erreur) setErreur(r.erreur); else setResultat(r)
         setChargement(false)
       })
-      .catch(() => { setErreur(true); setChargement(false) })
+      .catch(() => { if (actif) { setErreur('reseau'); setChargement(false) } })
+    return () => { actif = false }
   }, [reference, version])
 
   return (
@@ -104,7 +90,7 @@ function PopupVerset({ reference, onFermer }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0, color: 'var(--encre)', fontFamily: 'Fraunces, serif' }}>{reference}</h3>
+          <h3 style={{ margin: 0, color: 'var(--encre)', fontFamily: 'Fraunces, serif' }}>{resultat?.titre || reference}</h3>
           <button onClick={onFermer} style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--texte-doux)' }}>✕</button>
         </div>
 
@@ -115,14 +101,19 @@ function PopupVerset({ reference, onFermer }) {
         {chargement && <p className="note">Chargement…</p>}
         {erreur && (
           <p className="alerte">
-            Référence non trouvée dans cette version. Essayez un autre format
-            (ex. "Jean 3:16" plutôt que "Jn 3:16") ou une autre version.
+            {erreur === 'reseau'
+              ? 'Impossible de charger la Bible. Vérifiez votre connexion et réessayez.'
+              : erreur === 'reference'
+                ? 'Référence non reconnue. Écrivez-la ainsi : Jean 3:16, Ps 23:1-3, 1 Cor 13:4.'
+                : "Ce passage n'existe pas dans cette version."}
           </p>
         )}
-        {texte && (
-          <p style={{ fontSize: '1.05rem', lineHeight: 1.7, fontStyle: 'italic', color: 'var(--texte)' }}>
-            « {texte} »
-          </p>
+        {resultat && (
+          <div style={{ fontSize: '1.05rem', lineHeight: 1.7, color: 'var(--texte)' }}>
+            {resultat.lignes.map((l) => (
+              <p key={l.n} style={{ margin: '0 0 0.5rem' }}><sup style={{ color: 'var(--texte-doux)', marginRight: '0.3rem' }}>{l.n}</sup>{l.t}</p>
+            ))}
+          </div>
         )}
       </div>
     </div>
