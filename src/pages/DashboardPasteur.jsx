@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import useNomEglise from '../lib/useNomEglise.js'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import {
   collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp,
 } from 'firebase/firestore'
@@ -317,6 +320,7 @@ function MembresPasteur({ brancheId, membres, uid }) {
 
 // ── Vue lecture seule : travail du secrétaire de branche ─────────────────────
 function LectureSecretariat({ brancheId }) {
+  const nomEglise = useNomEglise(brancheId)
   const [onglet, setOnglet] = useState('membres')
   const [membres, setMembres] = useState([])
   const [pvs, setPvs] = useState([])
@@ -347,6 +351,30 @@ function LectureSecretariat({ brancheId }) {
         <button className={onglet === 'pv' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('pv')}>Procès-verbaux ({pvs.length})</button>
         <button className={onglet === 'courrier' ? 'onglet actif' : 'onglet'} onClick={() => setOnglet('courrier')}>Courrier ({courriers.length})</button>
       </nav>
+
+      <div style={{ marginBottom: '0.75rem' }}>
+        {onglet === 'membres' && (
+          <BoutonExport label="Exporter le registre des membres" onExport={() => exporterTableauPdf({
+            titre: 'Registre des membres', sousTitre: `${membres.length} membre(s) · ordre alphabétique`, eglise: nomEglise,
+            colonnes: ['Nom et prénom', 'Téléphone', 'Statut'],
+            lignes: membres.map((m) => [`${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim(), m.telephone || '', (m.statut || '').replace('_', ' ')]),
+          })} />
+        )}
+        {onglet === 'pv' && (
+          <BoutonExport label="Exporter les procès-verbaux" onExport={() => exporterTableauPdf({
+            titre: 'Registre des procès-verbaux', sousTitre: `${pvs.length} procès-verbal(aux) · ordre chronologique`, eglise: nomEglise,
+            colonnes: ['Date', 'Objet', 'Contenu'],
+            lignes: [...pvs].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((p) => [dateFr(p.date), p.objet || '', p.contenu || '']),
+          })} />
+        )}
+        {onglet === 'courrier' && (
+          <BoutonExport label="Exporter le registre des courriers" onExport={() => exporterTableauPdf({
+            titre: 'Registre des courriers', sousTitre: `${courriers.length} courrier(s) · ordre chronologique`, eglise: nomEglise,
+            colonnes: ['Date', 'Sens', 'Expéditeur / destinataire', 'Objet'],
+            lignes: [...courriers].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((c) => [dateFr(c.date), c.sens === 'entrant' ? 'Entrant' : 'Sortant', c.expediteur || '', c.objet || '']),
+          })} />
+        )}
+      </div>
 
       {onglet === 'membres' && (
         <section className="carte">
@@ -401,7 +429,23 @@ function LectureSecretariat({ brancheId }) {
 
 // ── Vue lecture seule : travail du trésorier de branche ──────────────────────
 function LectureTresorerie({ brancheId, mouvements, solde, seuil }) {
+  const nomEglise = useNomEglise(brancheId)
   const depasseSeuil = seuil != null && solde > seuil
+  const exporterJournal = () => {
+    const chrono = [...mouvements].sort((a, b) => horodatage(a.date) - horodatage(b.date))
+    let cumul = 0
+    const lignes = chrono.map((m) => {
+      const sortie = m.type === 'depense'
+      cumul += sortie ? -m.montant : m.montant
+      return [dateFr(m.date), TYPES.find((t) => t.valeur === m.type)?.label ?? m.type, m.description || '', sortie ? '' : fcfa(m.montant), sortie ? fcfa(m.montant) : '', fcfa(cumul)]
+    })
+    const e = chrono.filter((m) => m.type !== 'depense').reduce((a, m) => a + m.montant, 0)
+    const sor = chrono.filter((m) => m.type === 'depense').reduce((a, m) => a + m.montant, 0)
+    return exporterTableauPdf({
+      titre: 'Journal de caisse', sousTitre: `${chrono.length} mouvement(s) · ordre chronologique · solde actuel ${fcfa(solde)}`, eglise: nomEglise, orientation: 'landscape',
+      colonnes: ['Date', 'Nature', 'Libellé', 'Entrée', 'Sortie', 'Solde cumulé'], lignes, alignDroite: [3, 4, 5], pied: ['', '', 'Totaux', fcfa(e), fcfa(sor), fcfa(e - sor)],
+    })
+  }
   const TYPES = [
     { valeur: 'dime', label: 'Dîme' },
     { valeur: 'collecte', label: 'Collecte' },
@@ -418,6 +462,7 @@ function LectureTresorerie({ brancheId, mouvements, solde, seuil }) {
         <section className="carte">
           <h2 className="titre-carte">Solde actuel</h2>
           <p className="grand-nombre">{solde.toLocaleString('fr-FR')} FCFA</p>
+          <div style={{ marginBottom: '0.75rem' }}><BoutonExport label="Exporter le journal de caisse" onExport={exporterJournal} /></div>
           {seuil != null && (
             <p className={depasseSeuil ? 'alerte' : 'note'}>
               Seuil autorisé : {seuil.toLocaleString('fr-FR')} FCFA
