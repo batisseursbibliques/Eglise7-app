@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import useNomEglise from '../lib/useNomEglise.js'
+import { exporterTableauPdf, dateFr, horodatage } from '../lib/exportPdf.js'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
@@ -31,6 +34,7 @@ export default function DashboardSecretaireBranche({ profil, lectureSeule = fals
 }
 
 function GestionMembres({ brancheId, uid }) {
+  const nomEglise = useNomEglise(brancheId)
   const [membres, setMembres] = useState([])
   const [nom, setNom] = useState('')
   const [prenom, setPrenom] = useState('')
@@ -69,6 +73,13 @@ function GestionMembres({ brancheId, uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Registre ({membres.length} membres)</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter le registre des membres" onExport={() => exporterTableauPdf({
+            titre: 'Registre des membres', sousTitre: `${membres.length} membre(s) · ordre alphabétique`, eglise: nomEglise,
+            colonnes: ['Nom et prénom', 'Téléphone', 'Statut'],
+            lignes: membres.map((m) => [`${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim(), m.telephone || '', (m.statut || '').replace('_', ' ')]),
+          })} />
+        </div>
         <ul className="liste">
           {membres.map((m) => (
             <li key={m.id} className="ligne-liste">
@@ -85,6 +96,7 @@ function GestionMembres({ brancheId, uid }) {
 }
 
 function GestionPV({ brancheId, uid }) {
+  const nomEglise = useNomEglise(brancheId)
   const [pvs, setPvs] = useState([])
   const [date, setDate] = useState('')
   const [objet, setObjet] = useState('')
@@ -117,6 +129,13 @@ function GestionPV({ brancheId, uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Procès-verbaux ({pvs.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter les procès-verbaux" onExport={() => exporterTableauPdf({
+            titre: 'Registre des procès-verbaux', sousTitre: `${pvs.length} procès-verbal(aux) · ordre chronologique`, eglise: nomEglise,
+            colonnes: ['Date', 'Objet', 'Contenu'],
+            lignes: [...pvs].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((p) => [dateFr(p.date), p.objet || '', p.contenu || '']),
+          })} />
+        </div>
         <ul className="liste">
           {pvs.map((p) => (
             <li key={p.id} className="ligne-liste-verticale">
@@ -132,6 +151,7 @@ function GestionPV({ brancheId, uid }) {
 }
 
 function GestionCourrier({ brancheId, uid }) {
+  const nomEglise = useNomEglise(brancheId)
   const [courriers, setCourriers] = useState([])
   const [date, setDate] = useState('')
   const [sens, setSens] = useState('entrant')
@@ -169,6 +189,13 @@ function GestionCourrier({ brancheId, uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Registre des courriers ({courriers.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter le registre des courriers" onExport={() => exporterTableauPdf({
+            titre: 'Registre des courriers', sousTitre: `${courriers.length} courrier(s) · ordre chronologique`, eglise: nomEglise,
+            colonnes: ['Date', 'Sens', 'Expéditeur / destinataire', 'Objet'],
+            lignes: [...courriers].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((c) => [dateFr(c.date), c.sens === 'entrant' ? 'Entrant' : 'Sortant', c.expediteur || '', c.objet || '']),
+          })} />
+        </div>
         <ul className="liste">
           {courriers.map((c) => (
             <li key={c.id} className="ligne-liste">

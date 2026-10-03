@@ -1,4 +1,6 @@
 import { VERSIONS, lireVersets, lienAutresVersions } from '../lib/bible.js'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterDocumentPdf, dateFr } from '../lib/exportPdf.js'
 import React, { useEffect, useState, useRef } from 'react'
 import {
   collection, addDoc, onSnapshot, orderBy, query, doc,
@@ -189,6 +191,7 @@ export default function GestionMessages({ pasteurUid, pasteurNom, lectureSeule =
         <DetailMessage
           message={msg}
           pasteurUid={pasteurUid}
+          pasteurNom={pasteurNom}
           lectureSeule={lectureSeule}
           onRetour={() => { setVue('liste'); setMessageActif(null) }}
           onEditer={() => setVue('editer')}
@@ -211,6 +214,10 @@ export default function GestionMessages({ pasteurUid, pasteurNom, lectureSeule =
           <button className="bouton-principal" onClick={() => setVue('creer')}>+ Nouveau message</button>
         )}
       </div>
+
+      {messages.length > 0 && (
+        <div style={{ marginBottom: '1rem' }}><BoutonExport label="Exporter tous les messages" onExport={() => exporterTousMessages(messages, pasteurNom)} /></div>
+      )}
 
       {messages.length === 0 && (
         <p className="note">{lectureSeule ? 'Aucun message partagé pour le moment.' : 'Aucun message enregistré.'}</p>
@@ -246,7 +253,26 @@ export default function GestionMessages({ pasteurUid, pasteurNom, lectureSeule =
 // ─────────────────────────────────────────────────────────────────────────────
 // Détail d'un message
 // ─────────────────────────────────────────────────────────────────────────────
-function DetailMessage({ message: m, pasteurUid, lectureSeule, onRetour, onEditer, onVersetClick, STATUTS }) {
+
+// ── Export PDF d'un ou de plusieurs messages (brouillons compris) ─────────────
+const LIBELLE_STATUT = { brouillon: 'Brouillon', pret: 'Prêt', preche: 'Prêché' }
+function blocsMessage(m, avecTitre) {
+  return [
+    ...(avecTitre ? [{ label: `${m.titre || '(Sans titre)'} — ${LIBELLE_STATUT[m.statut] || 'Brouillon'}${m.modifieLe ? ` — ${dateFr(m.modifieLe)}` : ''}`, titreSeul: true }] : []),
+    { label: 'Thème', texte: m.theme },
+    { label: 'Verset principal', texte: m.versetPrincipal },
+    { label: 'Grands points', texte: m.points },
+    { label: 'Notes / développement', texte: m.notes },
+    { label: "Versets d'appui", texte: m.versets },
+    { label: 'Conclusion / Application', texte: m.conclusion },
+  ]
+}
+const exporterMessage = (m, pasteurNom) =>
+  exporterDocumentPdf({ titre: m.titre || 'Message', sousTitre: `Statut : ${LIBELLE_STATUT[m.statut] || 'Brouillon'}`, eglise: `Pasteur ${pasteurNom || ''}`.trim(), blocs: blocsMessage(m, false) })
+const exporterTousMessages = (messages, pasteurNom) =>
+  exporterDocumentPdf({ titre: 'Messages', sousTitre: `${messages.length} message(s)`, eglise: `Pasteur ${pasteurNom || ''}`.trim(), blocs: messages.flatMap((m) => blocsMessage(m, true)) })
+
+function DetailMessage({ message: m, pasteurUid, pasteurNom, lectureSeule, onRetour, onEditer, onVersetClick, STATUTS }) {
   async function changerStatut(statut) {
     await updateDoc(doc(db, 'utilisateurs', pasteurUid, 'messages', m.id), {
       statut, modifieLe: serverTimestamp(),
@@ -270,6 +296,7 @@ function DetailMessage({ message: m, pasteurUid, lectureSeule, onRetour, onEdite
           <h2 className="titre-carte" style={{ marginBottom: 0 }}>{m.titre || '(Sans titre)'}</h2>
           <span className="etiquette" style={{ color: s.couleur, borderColor: s.couleur }}>{s.label}</span>
         </div>
+        <div style={{ marginBottom: '0.75rem' }}><BoutonExport onExport={() => exporterMessage(m, pasteurNom)} /></div>
 
         {m.theme && <p style={{ color: 'var(--texte-doux)', margin: '0 0 0.5rem' }}>Thème : <strong>{m.theme}</strong></p>}
         {m.versetPrincipal && (

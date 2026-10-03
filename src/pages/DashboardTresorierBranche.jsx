@@ -10,6 +10,8 @@ const TYPES_MOUVEMENT = [
 ]
 
 import GestionProjets from './GestionProjets.jsx'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import { BoutonAbsence } from './GestionAbsence.jsx'
 
 export default function DashboardTresorierBranche({ profil, lectureSeule = false , page = 'caisse'}) {
@@ -33,6 +35,34 @@ export default function DashboardTresorierBranche({ profil, lectureSeule = false
   const solde = mouvements.reduce((acc, m) => m.type === 'depense' ? acc - m.montant : acc + m.montant, 0)
   const seuil = branche?.seuilSolde ?? null
   const depasseSeuil = seuil != null && solde > seuil
+
+
+  // ── Exports PDF ──
+  const nomEglise = branche?.nom || 'Église locale'
+  const libelleType = (v) => TYPES_MOUVEMENT.find((t) => t.valeur === v)?.label ?? v
+  async function exporterJournal() {
+    const chrono = [...mouvements].sort((a, b) => horodatage(a.date) - horodatage(b.date))
+    let cumul = 0
+    const lignes = chrono.map((m) => {
+      const sortie = m.type === 'depense'
+      cumul += sortie ? -m.montant : m.montant
+      return [dateFr(m.date), libelleType(m.type), m.description || '', sortie ? '' : fcfa(m.montant), sortie ? fcfa(m.montant) : '', fcfa(cumul)]
+    })
+    const entrees = chrono.filter((m) => m.type !== 'depense').reduce((a, m) => a + m.montant, 0)
+    const sorties = chrono.filter((m) => m.type === 'depense').reduce((a, m) => a + m.montant, 0)
+    await exporterTableauPdf({
+      titre: 'Journal de caisse', sousTitre: `${chrono.length} mouvement(s) · ordre chronologique · solde actuel ${fcfa(solde)}`,
+      eglise: nomEglise, orientation: 'landscape', colonnes: ['Date', 'Nature', 'Libellé', 'Entrée', 'Sortie', 'Solde cumulé'],
+      lignes, alignDroite: [3, 4, 5], pied: ['', '', 'Totaux', fcfa(entrees), fcfa(sorties), fcfa(entrees - sorties)],
+    })
+  }
+  async function exporterRapport() {
+    const lignes = TYPES_MOUVEMENT.map(({ valeur, label }) => [label, String(mouvements.filter((m) => m.type === valeur).length), fcfa(mouvements.filter((m) => m.type === valeur).reduce((a, m) => a + m.montant, 0))])
+    await exporterTableauPdf({
+      titre: 'Rapport financier', sousTitre: `Solde de la caisse : ${fcfa(solde)}${seuil != null ? ` · seuil autorisé : ${fcfa(seuil)}` : ''}`,
+      eglise: nomEglise, numeroter: false, colonnes: ['Catégorie', 'Mouvements', 'Total'], lignes, alignDroite: [1, 2],
+    })
+  }
 
   async function ajouterMouvement(e) {
     e.preventDefault()
@@ -78,6 +108,7 @@ export default function DashboardTresorierBranche({ profil, lectureSeule = false
 
           <section className="carte">
             <h2 className="titre-carte">Historique des mouvements</h2>
+            <div style={{ marginBottom: '0.75rem' }}><BoutonExport label="Exporter le journal de caisse" onExport={exporterJournal} /></div>
             <ul className="liste">
               {mouvements.map((m) => (
                 <li key={m.id} className="ligne-liste">
@@ -98,6 +129,7 @@ export default function DashboardTresorierBranche({ profil, lectureSeule = false
         <div className="grille-deux">
           <section className="carte">
             <h2 className="titre-carte">Résumé financier</h2>
+            <div style={{ marginBottom: '0.75rem' }}><BoutonExport label="Exporter le rapport" onExport={exporterRapport} /></div>
             <ul className="liste">
               {TYPES_MOUVEMENT.map(({ valeur, label }) => {
                 const total = mouvements.filter((m) => m.type === valeur).reduce((s, m) => s + m.montant, 0)
