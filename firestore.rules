@@ -194,6 +194,16 @@ service cloud.firestore {
         allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
         allow write: if estNational() || estPasteurDe(brancheId);
 
+        // Équipe et tâches du ministère : le responsable gère, le pasteur lit et peut corriger
+        match /membres/{mId} {
+          allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+          allow write: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+        }
+        match /taches/{tId} {
+          allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+          allow write: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
+        }
+
         match /comptesRendus/{crId} {
           allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
           allow create: if estDeptDe(brancheId) || estResponsableBranche(brancheId);

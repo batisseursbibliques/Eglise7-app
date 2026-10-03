@@ -172,6 +172,7 @@ const SECTIONS_PAR_ROLE = {
     {
       liens: [
         { icone: '📝', texte: 'Comptes-rendus', page: 'comptes-rendus' },
+        { icone: '📣', texte: 'Communication', page: 'communication' },
         { icone: '👥', texte: 'Membres', page: 'membres' },
         { icone: '📋', texte: 'Tâches', page: 'taches' },
       ],

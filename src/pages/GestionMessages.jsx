@@ -1,4 +1,4 @@
-import { VERSIONS, lireVersets } from '../lib/bible.js'
+import { VERSIONS, lireVersets, lienAutresVersions } from '../lib/bible.js'
 import React, { useEffect, useState, useRef } from 'react'
 import {
   collection, addDoc, onSnapshot, orderBy, query, doc,
@@ -114,6 +114,11 @@ function PopupVerset({ reference, onFermer }) {
               <p key={l.n} style={{ margin: '0 0 0.5rem' }}><sup style={{ color: 'var(--texte-doux)', marginRight: '0.3rem' }}>{l.n}</sup>{l.t}</p>
             ))}
           </div>
+        )}
+        {resultat && (
+          <a href={lienAutresVersions(resultat.titre)} target="_blank" rel="noopener noreferrer" className="bouton-lien">
+            Autres versions (Segond 21, Semeur, Parole de Vie…) ↗
+          </a>
         )}
       </div>
     </div>

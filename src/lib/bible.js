@@ -3,7 +3,13 @@ export const VERSIONS = [
   { code: 'lsg', label: 'Louis Segond (1910)' },
   { code: 'darby', label: 'Darby' },
   { code: 'martin', label: 'Martin (1744)' },
+  { code: 'crampon', label: 'Crampon (1923)' },
+  { code: 'kjv', label: 'King James (anglais)' },
 ]
+
+// Versions protégées par des droits d'auteur : on renvoie vers un site biblique officiel
+export const lienAutresVersions = (titre) =>
+  `https://www.biblegateway.com/passage/?search=${encodeURIComponent(titre)}&version=S21`
 
 const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s.]/g, '')
 
