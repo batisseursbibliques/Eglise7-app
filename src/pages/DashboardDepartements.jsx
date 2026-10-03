@@ -28,6 +28,8 @@ export default function DashboardDepartements({ brancheId }) {
   const deptAffiche = departements.find((d) => d.id === departementSelectionne)
 
   return (
+    <div>
+    <ComptesRendusRecus brancheId={brancheId} departements={departements} />
     <div className="grille-deux">
       <section className="carte">
         <h2 className="titre-carte">Créer un département</h2>
@@ -62,6 +64,7 @@ export default function DashboardDepartements({ brancheId }) {
           <p className="note">Sélectionne un département pour voir ou modifier ses informations.</p>
         )}
       </section>
+    </div>
     </div>
   )
 }
@@ -104,5 +107,51 @@ function DetailDepartement({ brancheId, departement, onFermer }) {
         <button type="submit" className="bouton-principal">Enregistrer</button>
       </form>
     </div>
+  )
+}
+
+
+// ── Comptes-rendus envoyés par les responsables de départements ─────────────
+function ComptesRendusRecus({ brancheId, departements }) {
+  const [parDept, setParDept] = useState({})
+  const [erreur, setErreur] = useState(false)
+
+  useEffect(() => {
+    const ids = departements.map((d) => d.id)
+    const fins = ids.map((id) =>
+      onSnapshot(
+        query(collection(db, 'branches', brancheId, 'departements', id, 'comptesRendus'), orderBy('date', 'desc')),
+        (snap) => {
+          setErreur(false)
+          setParDept((prev) => ({ ...prev, [id]: snap.docs.map((d) => ({ id: d.id, ...d.data() })) }))
+        },
+        () => setErreur(true),
+      ),
+    )
+    return () => fins.forEach((f) => f())
+  }, [brancheId, departements.map((d) => d.id).join(',')])
+
+  const liste = departements
+    .flatMap((d) => (parDept[d.id] || []).map((c) => ({ ...c, dept: d.nom })))
+    .sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0))
+    .slice(0, 30)
+
+  return (
+    <section className="carte" style={{ marginBottom: '1.5rem' }}>
+      <h2 className="titre-carte">Comptes-rendus reçus</h2>
+      {erreur && <p className="alerte">Impossible de charger certains comptes-rendus.</p>}
+      <ul className="liste">
+        {liste.map((c) => (
+          <li key={`${c.dept}-${c.id}`} className="ligne-liste-verticale">
+            <strong>{c.dept}</strong>
+            <span className="note" style={{ marginLeft: '0.5rem' }}>
+              {c.date?.toDate ? c.date.toDate().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+            </span>
+            <p style={{ margin: '0.3rem 0 0', whiteSpace: 'pre-line' }}>{c.contenu}</p>
+          </li>
+        ))}
+        {liste.length === 0 && <p className="note">Aucun compte-rendu reçu pour l'instant.</p>}
+      </ul>
+    </section>
   )
 }
