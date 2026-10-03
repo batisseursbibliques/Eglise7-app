@@ -177,6 +177,18 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // Rappels du pasteur à ses collaborateurs
+      match /rappels/{rId} {
+        allow read: if estResponsableBranche(brancheId) || resource.data.pourUid == request.auth.uid;
+        allow create: if estResponsableBranche(brancheId)
+          && request.resource.data.message is string
+          && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 1000;
+        allow update: if estResponsableBranche(brancheId)
+          || (resource.data.pourUid == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lu', 'luLe']));
+        allow delete: if estResponsableBranche(brancheId);
+      }
+
       // Départements
       match /departements/{deptId} {
         allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);

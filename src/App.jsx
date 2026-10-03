@@ -3,6 +3,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from './lib/firebase.js'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ChangerMotDePasse from './components/ChangerMotDePasse.jsx'
+import { RappelsRecus } from './pages/RappelsEquipe.jsx'
 import { LOGO_MIMC } from './assets/logo-mimc.js'
 import Tiroir from './components/Tiroir.jsx'
 
@@ -114,22 +115,20 @@ const SECTIONS_PAR_ROLE = {
   ],
   pasteur: [
     {
-      label: 'Mon église',
+      label: 'Supervision',
       liens: [
-        { icone: '💰', texte: 'Caisse', page: 'caisse' },
-        { icone: '👥', texte: 'Membres', page: 'membres' },
-        { icone: '🙏', texte: 'Cultes', page: 'cultes' },
-        { icone: '📅', texte: 'Événements', page: 'evenements' },
+        { icone: '🏠', texte: 'Vue d\'ensemble', page: 'supervision' },
+        { icone: '🏢', texte: 'Départements', page: 'departements' },
+        { icone: '📌', texte: 'Rappels à l\'équipe', page: 'rappels' },
         { icone: '📦', texte: 'Projets', page: 'projets' },
         { icone: '✍️', texte: 'Mes messages', page: 'messages' },
       ],
     },
     {
-      label: 'Mon équipe',
+      label: 'Suivi de l\'équipe (lecture)',
       liens: [
         { icone: '📋', texte: 'Secrétariat', page: 'secretariat' },
         { icone: '💰', texte: 'Trésorerie', page: 'tresorerie' },
-        { icone: '🏢', texte: 'Départements', page: 'departements' },
         { icone: '📣', texte: 'Communication', page: 'communication' },
         { icone: '📊', texte: 'Rapports', page: 'rapports' },
       ],
@@ -306,10 +305,10 @@ function PageContenu({ profil, pageActive, deconnexion }) {
   if (role === 'tresorier_general') return <DashboardTresorierGeneral profil={profil} page={pageActive} />
   if (role === 'pasteur') return <DashboardPasteur profil={profil} page={pageActive} />
   if (role === 'pasteur_suppleant') return <DashboardPasteurSuppleant profil={profil} />
-  if (role === 'departement') return <DashboardDepartement profil={profil} page={pageActive} />
-  if (role === 'secretaire') return <DashboardSecretaireBranche profil={profil} page={pageActive} />
+  if (role === 'departement') return <><RappelsRecus profil={profil} /><DashboardDepartement profil={profil} page={pageActive} /></>
+  if (role === 'secretaire') return <><RappelsRecus profil={profil} /><DashboardSecretaireBranche profil={profil} page={pageActive} /></>
   if (role === 'secretaire_adjoint') return <DashboardSecretaireAdjoint profil={profil} />
-  if (role === 'tresorier') return <DashboardTresorierBranche profil={profil} page={pageActive} />
+  if (role === 'tresorier') return <><RappelsRecus profil={profil} /><DashboardTresorierBranche profil={profil} page={pageActive} /></>
   if (role === 'tresorier_adjoint') return <DashboardTresorierAdjoint profil={profil} />
   return null
 }
