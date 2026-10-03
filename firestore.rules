@@ -122,7 +122,9 @@ service cloud.firestore {
         || (roleDeUid(request.auth.uid) == 'pasteur'
             && request.resource.data.role == 'departement'
             && request.resource.data.brancheId == brancheDeUid(request.auth.uid));
-      allow update: if estAdmin() || estNational();
+      allow update: if estAdmin() || estNational()
+        || (request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mdpTemporaire']));
       allow delete: if false;
 
       // Messages du pasteur — privés en brouillon, visibles en "prêt"/"prêché" par le président
@@ -195,7 +197,7 @@ service cloud.firestore {
         allow write: if estNational() || estPasteurDe(brancheId);
 
         // Équipe et tâches du ministère : le responsable gère, le pasteur lit et peut corriger
-        match /membres/{mId} {
+        match /equipe/{mId} {
           allow read: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
           allow write: if estResponsableBranche(brancheId) || estDeptDe(brancheId);
         }
@@ -308,6 +310,21 @@ service cloud.firestore {
         allow write: if estNational() || estTresorierGeneral();
       }
     }
+    // ── Lectures transversales (toutes les églises) pour les rôles nationaux ──
+    // Indispensables aux vues « toutes les églises » : membres, PV, caisses et reversements.
+    match /{path=**}/membres/{id} {
+      allow read: if estNational() || estSecretaireGeneral();
+    }
+    match /{path=**}/pv/{id} {
+      allow read: if estNational() || estSecretaireGeneral();
+    }
+    match /{path=**}/caisse/{id} {
+      allow read: if estNational() || estTresorierGeneral() || estCommissaire();
+    }
+    match /{path=**}/virements/{id} {
+      allow read: if estNational() || estTresorierGeneral() || estCommissaire() || estAdmin();
+    }
+
     // ── Site public : lecture libre, écriture par le Président ────────────────
     match /siteActualites/{id} { allow read: if true; allow write: if estNational(); }
     match /siteEvenements/{id} { allow read: if true; allow write: if estNational(); }

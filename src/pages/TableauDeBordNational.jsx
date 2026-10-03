@@ -169,7 +169,7 @@ export default function TableauDeBordNational({ profil, branches, onNaviguer, on
             return (
               <button key={e.id} className="pr-egl" onClick={() => onNaviguer('branches')}>
                 <div className="pr-egl-tete"><strong>{e.nom}</strong>{e.mere && <span className="pr-badge">mère</span>}</div>
-                <small>{[e.ville, e.mere && e.direction === 'archeveque' ? "Apôtre" : e.pasteurNom].filter(Boolean).join(' · ') || 'Sans pasteur nommé'}</small>
+                <small>{[e.ville, e.mere && e.direction === 'national' ? "Apôtre" : e.pasteurNom].filter(Boolean).join(' · ') || 'Sans pasteur nommé'}</small>
                 <div className="pr-egl-chiffres"><span><b>{e.nb}</b> membres</span><span><b>{court(e.solde)}</b> en caisse</span></div>
                 {e.seuilSolde > 0 && <span className="pr-jauge"><span style={{ width: `${part}%` }} className={part >= 100 ? 'pr-plein' : ''} /></span>}
               </button>

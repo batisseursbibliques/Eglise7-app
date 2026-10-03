@@ -17,14 +17,14 @@ export function MembresDepartement({ brancheId, departementId }) {
   const [fonction, setFonction] = useState('')
 
   useEffect(() => {
-    const q = query(base(brancheId, departementId, 'membres'), orderBy('nom'))
+    const q = query(base(brancheId, departementId, 'equipe'), orderBy('nom'))
     return onSnapshot(q, (s) => setMembres(s.docs.map((d) => ({ id: d.id, ...d.data() }))))
   }, [brancheId, departementId])
 
   async function ajouter(e) {
     e.preventDefault()
     if (!nom.trim()) return
-    await addDoc(base(brancheId, departementId, 'membres'), {
+    await addDoc(base(brancheId, departementId, 'equipe'), {
       nom: nom.trim(), telephone: telephone.trim(), fonction: fonction.trim(), creeLe: serverTimestamp(),
     })
     setNom(''); setTelephone(''); setFonction('')
@@ -50,7 +50,7 @@ export function MembresDepartement({ brancheId, departementId }) {
                 {m.fonction && <span className="note"> · {m.fonction}</span>}
                 {m.telephone && <span className="note"> · <a href={`tel:${m.telephone.replace(/\s/g, '')}`}>{m.telephone}</a></span>}
               </span>
-              <button className="bouton-lien" onClick={() => window.confirm(`Retirer ${m.nom} ?`) && deleteDoc(refDoc(brancheId, departementId, 'membres', m.id))}>Retirer</button>
+              <button className="bouton-lien" onClick={() => window.confirm(`Retirer ${m.nom} ?`) && deleteDoc(refDoc(brancheId, departementId, 'equipe', m.id))}>Retirer</button>
             </li>
           ))}
           {membres.length === 0 && <p className="note">Aucun membre enregistré pour l'instant.</p>}
@@ -76,7 +76,7 @@ export function TachesDepartement({ brancheId, departementId }) {
   }, [brancheId, departementId])
 
   useEffect(() => {
-    const q = query(base(brancheId, departementId, 'membres'), orderBy('nom'))
+    const q = query(base(brancheId, departementId, 'equipe'), orderBy('nom'))
     return onSnapshot(q, (s) => setMembres(s.docs.map((d) => d.data().nom)))
   }, [brancheId, departementId])
 

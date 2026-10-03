@@ -59,12 +59,12 @@ export function AccueilPasteur({ profil, branche, mouvements, membres, solde, se
   ].filter(Boolean)
   const part = seuil ? Math.min(1, Math.max(0, solde / seuil)) : null
   const dateCulte = prochain ? new Date(`${prochain.date}T00:00`) : null
-  const direction = branche?.mere && branche?.direction === 'archeveque' ? "Dirigée par l'Apôtre" : branche?.pasteurNom ? `Pasteur : ${branche.pasteurNom}` : null
+  const direction = branche?.mere && branche?.direction === 'national' ? "Dirigée par l'Apôtre" : branche?.pasteurNom ? `Pasteur : ${branche.pasteurNom}` : null
 
   return (
     <div className="eg">
       <header className="eg-hero">
-        <p className="eg-salut">{profil.archeveque ? `${salutation()}, Apôtre` : `${salutation()}, Pasteur ${profil.nom ?? ''}`}</p>
+        <p className="eg-salut">{profil.fondateur ? `${salutation()}, Apôtre` : `${salutation()}, Pasteur ${profil.nom ?? ''}`}</p>
         <h1>{branche?.nom ?? 'Mon église'}</h1>
         <p className="eg-lieu">
           {branche?.mere && <span className="eg-badge">Église mère</span>}
