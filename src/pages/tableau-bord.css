@@ -1,8 +1,8 @@
-.tb { --tb-nuit:#4A0B16; --tb-bleu:#8B1A2B; --tb-ciel:#D98E9A; --tb-gris:#CDBDB5; --tb-or:#C9992C; --tb-rouge:#D32F3A; --tb-vert:#2E8B57;
+.tb { --tb-nuit:#4A0B16; --tb-bleu:#8B1A2B; --tb-ciel:#D98E9A; --tb-gris:#CDBDB5; --tb-rouge:#D32F3A; --tb-vert:#2E8B57;
   --tb-fond:var(--papier-carte); --tb-ligne:var(--ligne); display:flex; flex-direction:column; gap:1rem; }
 .tb * { box-sizing:border-box; }
 .tb button { font-family:inherit; }
-.tb-accueil { position:relative; overflow:hidden; background:linear-gradient(135deg,var(--tb-nuit),var(--tb-bleu) 70%,#a8283a); color:#fff; border-radius:14px; padding:1.5rem 1.25rem 1.4rem; }
+.tb-accueil { position:relative; overflow:hidden; background:linear-gradient(135deg,var(--tb-nuit),var(--tb-bleu)); color:#fff; border-radius:14px; padding:1.5rem 1.25rem 1.4rem; }
 .tb-sceau { position:absolute; right:-28px; top:50%; width:170px; height:170px; transform:translateY(-50%); opacity:.16; pointer-events:none; }
 .tb-date { margin:0 0 .35rem; font-size:.85rem; opacity:.8; text-transform:capitalize; }
 .tb-accueil h1 { margin:0; font-family:'Fraunces',serif; font-weight:600; font-size:1.75rem; line-height:1.15; max-width:16ch; }
@@ -32,7 +32,7 @@
 .tb-mois { display:flex; flex-direction:column; align-items:center; gap:.15rem; height:100%; }
 .tb-colonnes { flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; gap:3px; border-bottom:1px solid var(--tb-ligne); }
 .tb-barre { width:42%; max-width:1.1rem; min-height:2px; border-radius:3px 3px 0 0; }
-.tb-entree { background:var(--tb-or); } .tb-sortie { background:var(--tb-bleu); }
+.tb-entree { background:var(--tb-bleu); } .tb-sortie { background:var(--tb-rouge); }
 .tb-mois small { font-size:.72rem; color:var(--texte-doux); } .tb-val { font-weight:600; color:var(--tb-nuit)!important; }
 .tb-legende { margin:.7rem 0 0; font-size:.8rem; color:var(--texte-doux); display:flex; gap:.9rem; align-items:center; }
 .tb-pt { display:inline-block; width:.6rem; height:.6rem; border-radius:50%; margin-right:.3rem; }
@@ -53,6 +53,8 @@
   .tb-chiffres { grid-template-columns:repeat(4,1fr); } .tb-chiffre.tb-large { grid-column:auto; }
   .tb-grille { grid-template-columns:1fr 1fr; } .tb-pleine { grid-column:1 / -1; }
 }
-
-.tb-accueil h1 { color:#fff; }
-.tb-chiffre { border-top-color:var(--tb-or); }
+/* Pastille d'absence : discrète, dans le coin */
+.abs-discret { display:flex; justify-content:flex-end; margin:-.5rem 0 .4rem; }
+.abs-discret button { background:none; border:1px solid var(--ligne); color:var(--texte-doux); border-radius:999px; padding:.2rem .65rem; font-size:.72rem; cursor:pointer; display:inline-flex; align-items:center; gap:.4rem; }
+.abs-discret button i { width:.5rem; height:.5rem; border-radius:50%; background:#2E8B57; } .abs-discret button.absent i { background:#C9992C; }
+.abs-discret button:hover { color:var(--encre); border-color:var(--encre); }

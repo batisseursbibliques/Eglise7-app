@@ -1,16 +1,18 @@
+import { AccueilSG } from './AccueilRoles.jsx'
 import React, { useEffect, useState } from 'react'
 import BoutonExport from '../components/BoutonExport.jsx'
 import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, collectionGroup } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
-export default function DashboardSecretaireGeneral({ profil , page = 'membres'}) {
+export default function DashboardSecretaireGeneral({ profil , page = 'accueil', onNaviguer = () => {} }) {
   const { uid } = profil
   const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Secrétariat Général du BEN — M.I.M.C</h1>
+      {onglet === 'accueil' && <AccueilSG profil={profil} onNaviguer={onNaviguer} />}
       {onglet === 'membres' && <VueMembresNational />}
       {onglet === 'pv' && <PVNational uid={uid} />}
       {onglet === 'courrier' && <CourrierNational uid={uid} />}

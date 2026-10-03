@@ -1,3 +1,4 @@
+import { AccueilTG } from './AccueilRoles.jsx'
 import React, { useEffect, useState } from 'react'
 import BoutonExport from '../components/BoutonExport.jsx'
 import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
@@ -14,13 +15,14 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardTresorierGeneral({ profil , page = 'virements'}) {
+export default function DashboardTresorierGeneral({ profil , page = 'accueil', onNaviguer = () => {} }) {
   const { user } = useAuth()
   const onglet = page
 
   return (
     <div>
       <h1 className="titre-page">Trésorerie Générale du BEN — M.I.M.C</h1>
+      {onglet === 'accueil' && <AccueilTG profil={profil} onNaviguer={onNaviguer} />}
       {onglet === 'virements' && <GestionVirements uid={user?.uid} />}
       {onglet === 'consolidation' && <ConsolidationFinanciere />}
       {onglet === 'branches' && <CaissesBranches />}

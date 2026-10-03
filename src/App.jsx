@@ -95,6 +95,7 @@ const SECTIONS_PAR_ROLE = {
   secretaire_general: [
     {
       liens: [
+        { icone: '🏠', texte: 'Tableau de bord', page: 'accueil' },
         { icone: '👥', texte: 'Membres (toutes)', page: 'membres' },
         { icone: '📋', texte: 'PV du BEN', page: 'pv' },
         { icone: '✉️', texte: 'Courrier du BEN', page: 'courrier' },
@@ -105,6 +106,7 @@ const SECTIONS_PAR_ROLE = {
   tresorier_general: [
     {
       liens: [
+        { icone: '🏠', texte: 'Tableau de bord', page: 'accueil' },
         { icone: '💸', texte: 'Virements', page: 'virements' },
         { icone: '📊', texte: 'Consolidation', page: 'consolidation' },
         { icone: '🏦', texte: 'Caisses des branches', page: 'branches' },
@@ -302,9 +304,9 @@ function PageContenu({ profil, pageActive, deconnexion, onNaviguer }) {
   if (role === 'organisateur_national') return <DashboardOrganisateurNational profil={profil} page={pageActive} />
   if (role === 'conseiller_national') return <DashboardConseillerNational profil={profil} page={pageActive} />
   if (role === 'commissaire_comptes') return <DashboardCommissaireComptes profil={profil} page={pageActive} />
-  if (role === 'secretaire_general') return <DashboardSecretaireGeneral profil={profil} page={pageActive} />
-  if (role === 'tresorier_general') return <DashboardTresorierGeneral profil={profil} page={pageActive} />
-  if (role === 'pasteur') return <DashboardPasteur profil={profil} page={pageActive} />
+  if (role === 'secretaire_general') return <DashboardSecretaireGeneral profil={profil} page={pageActive} onNaviguer={onNaviguer} />
+  if (role === 'tresorier_general') return <DashboardTresorierGeneral profil={profil} page={pageActive} onNaviguer={onNaviguer} />
+  if (role === 'pasteur') return <DashboardPasteur profil={profil} page={pageActive} onNaviguer={onNaviguer} />
   if (role === 'pasteur_suppleant') return <DashboardPasteurSuppleant profil={profil} />
   if (role === 'departement') return <><RappelsRecus profil={profil} /><DashboardDepartement profil={profil} page={pageActive} /></>
   if (role === 'secretaire') return <><RappelsRecus profil={profil} /><DashboardSecretaireBranche profil={profil} page={pageActive} /></>

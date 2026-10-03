@@ -18,6 +18,7 @@ import GestionProjets from './GestionProjets.jsx'
 import GestionMessages from './GestionMessages.jsx'
 import { BoutonAbsence } from './GestionAbsence.jsx'
 import RappelsEquipe from './RappelsEquipe.jsx'
+import { AccueilPasteur } from './AccueilEglise.jsx'
 const TYPES_MOUVEMENT = [
   { valeur: 'dime', label: 'Dîme' },
   { valeur: 'collecte', label: 'Collecte' },
@@ -25,7 +26,7 @@ const TYPES_MOUVEMENT = [
   { valeur: 'depense', label: 'Dépense' },
 ]
 
-export default function DashboardPasteur({ profil, lectureSeule = false, page = 'caisse' }) {
+export default function DashboardPasteur({ profil, lectureSeule = false, page = 'caisse', onNaviguer = () => {} }) {
   const brancheId = profil.brancheId
   const onglet = page
   const [branche, setBranche] = useState(null)
@@ -67,7 +68,7 @@ export default function DashboardPasteur({ profil, lectureSeule = false, page = 
       <h1 className="titre-page">{branche?.nom ?? 'Mon église locale'}</h1>
 
       {onglet === 'supervision' && (
-        <SupervisionPasteur mouvements={mouvements} membres={membres} solde={solde} seuil={seuil} depasseSeuil={depasseSeuil} />
+        <AccueilPasteur profil={profil} branche={branche} mouvements={mouvements} membres={membres} solde={solde} seuil={seuil} depasseSeuil={depasseSeuil} onNaviguer={onNaviguer} />
       )}
 
       {onglet === 'rappels' && <RappelsEquipe profil={profil} />}
