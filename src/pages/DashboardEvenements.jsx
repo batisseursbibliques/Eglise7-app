@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import useNomEglise from '../lib/useNomEglise.js'
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
@@ -10,6 +13,7 @@ const TYPES_EVENEMENT = [
 ]
 
 export default function DashboardEvenements({ brancheId }) {
+  const nomEglise = useNomEglise(brancheId)
   const [evenements, setEvenements] = useState([])
   const [type, setType] = useState('bapteme')
   const [date, setDate] = useState('')
@@ -57,6 +61,13 @@ export default function DashboardEvenements({ brancheId }) {
 
       <section className="carte">
         <h2 className="titre-carte">Historique ({evenements.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter les événements" onExport={() => exporterTableauPdf({
+            titre: 'Registre des événements', sousTitre: `${evenements.length} événement(s) · ordre chronologique`, eglise: nomEglise,
+            colonnes: ['Date', 'Nature', 'Personnes concernées', 'Notes'],
+            lignes: [...evenements].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((ev) => [dateFr(ev.date), TYPES_EVENEMENT.find((t) => t.valeur === ev.type)?.label || ev.type || '', ev.personnesConcernees || '', ev.notes || '']),
+          })} />
+        </div>
         <ul className="liste">
           {evenements.map((ev) => (
             <li key={ev.id} className="ligne-liste">

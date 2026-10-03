@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, exporterDocumentPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import useNomEglise from '../lib/useNomEglise.js'
 import {
   collection, addDoc, onSnapshot, orderBy, query,
   collectionGroup, serverTimestamp,
@@ -11,6 +14,8 @@ const TYPES_MOUVEMENT = [
   { valeur: 'don', label: 'Don' },
   { valeur: 'depense', label: 'Dépense' },
 ]
+
+const AVIS = { favorable: 'Favorable', favorable_reserves: 'Favorable avec réserves', defavorable: 'Défavorable' }
 
 export default function DashboardCommissaireComptes({ profil , page = 'controle'}) {
   const onglet = page
@@ -65,10 +70,24 @@ function ControleFinancier() {
   }).reduce((s, v) => s + v.montant, 0)
 
   const annees = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
+  const exporterControle = () => {
+    const calc = (liste) => {
+      const e = liste.filter((m) => m.type !== 'depense').reduce((a, m) => a + m.montant, 0)
+      const s = liste.filter((m) => m.type === 'depense').reduce((a, m) => a + m.montant, 0)
+      return [e, s, e - s]
+    }
+    const lignes = branches.map((b) => [b.nom || b.id, ...calc(mvtAnnee.filter((m) => m.brancheId === b.id)).map(fcfa)])
+    const [te, ts, tn] = calc(mvtAnnee)
+    return exporterTableauPdf({
+      titre: `Contrôle financier ${annee}`, sousTitre: `Reversements validés en ${annee} : ${fcfa(totalReversements)}`, eglise: 'Commissariat aux comptes',
+      colonnes: ['Église', 'Entrées', 'Sorties', 'Solde'], lignes, alignDroite: [1, 2, 3], pied: ['Total', fcfa(te), fcfa(ts), fcfa(tn)],
+    })
+  }
 
   return (
     <div>
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <BoutonExport label={`Exporter le contrôle ${annee}`} onExport={exporterControle} />
         <select value={annee} onChange={(e) => setAnnee(Number(e.target.value))} className="champ-saisie" style={{ maxWidth: '180px' }}>
           {annees.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
@@ -171,6 +190,17 @@ function RapportAnnuel({ uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Rapports déposés ({rapports.length})</h2>
+        {rapports.length > 0 && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <BoutonExport label="Exporter tous les rapports" onExport={() => exporterDocumentPdf({
+              titre: 'Rapports du commissariat aux comptes', sousTitre: `${rapports.length} rapport(s)`, eglise: 'Commissariat aux comptes',
+              blocs: rapports.flatMap((r) => [
+                { label: `Exercice ${r.annee} - avis ${AVIS[r.avis] || r.avis || ''}`, titreSeul: true },
+                { label: 'Constats', texte: r.contenu }, { label: 'Conclusion', texte: r.conclusion },
+              ]),
+            })} />
+          </div>
+        )}
         <ul className="liste">
           {rapports.map((r) => {
             const avisLabel = { favorable: '✅ Favorable', favorable_reserves: '⚠️ Avec réserves', defavorable: '❌ Défavorable' }[r.avis] ?? r.avis
@@ -178,6 +208,7 @@ function RapportAnnuel({ uid }) {
               <li key={r.id} className="ligne-liste-verticale">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <strong>Exercice {r.annee}</strong>
+                  <BoutonExport petit label="Exporter" onExport={() => exporterDocumentPdf({ titre: `Rapport du commissariat aux comptes - exercice ${r.annee}`, sousTitre: `Avis : ${AVIS[r.avis] || r.avis || ''}`, eglise: 'Commissariat aux comptes', blocs: [{ label: 'Constats', texte: r.contenu }, { label: 'Conclusion', texte: r.conclusion }] })} />
                   <span className="etiquette">{avisLabel}</span>
                 </div>
                 {r.conclusion && <p className="note" style={{ margin: '0.25rem 0 0' }}>{r.conclusion.slice(0, 120)}…</p>}
@@ -221,6 +252,13 @@ function ObservationsCommissaire({ uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Observations ({obs.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter les observations" onExport={() => exporterTableauPdf({
+            titre: 'Observations du commissariat aux comptes', sousTitre: `${obs.length} observation(s) · ordre chronologique`, eglise: 'Commissariat aux comptes',
+            colonnes: ['Date', 'Destinataire', 'Observation'],
+            lignes: [...obs].sort((a, b) => horodatage(a.creeLe) - horodatage(b.creeLe)).map((o) => [dateFr(o.creeLe), o.cible || '', o.texte || '']),
+          })} />
+        </div>
         <ul className="liste">
           {obs.map((o) => (
             <li key={o.id} className="ligne-liste-verticale">

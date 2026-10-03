@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, exporterDocumentPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import useNomEglise from '../lib/useNomEglise.js'
 import {
   collection, addDoc, onSnapshot, orderBy, query, doc, getDoc,
   serverTimestamp, updateDoc, increment,
@@ -10,6 +13,7 @@ import { db } from '../lib/firebase.js'
 // lectureSeule = true pour le pasteur et le national qui consultent
 // ─────────────────────────────────────────────────────────────────────────────
 export default function GestionProjets({ brancheId, uid, lectureSeule = false }) {
+  const nomEgliseProjets = useNomEglise(brancheId)
   const [projets, setProjets] = useState([])
   const [projetActif, setProjetActif] = useState(null)
   const [vue, setVue] = useState('liste') // 'liste' | 'detail' | 'creer'
@@ -58,6 +62,15 @@ export default function GestionProjets({ brancheId, uid, lectureSeule = false })
 
   return (
     <div>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <BoutonExport label="Exporter les projets" onExport={() => exporterTableauPdf({
+          titre: brancheId ? "Registre des projets de l'église" : 'Registre des projets du BEN', sousTitre: `${projets.length} projet(s)`,
+          eglise: brancheId ? nomEgliseProjets : 'Bureau Exécutif National', orientation: 'landscape',
+          colonnes: ['Projet', 'Début', 'Fin', 'Objectif', 'Reçu', 'Avancement', 'Description'],
+          lignes: projets.map((p) => [p.nom || '', dateFr(p.dateDebut), dateFr(p.dateFin), p.objectif > 0 ? fcfa(p.objectif) : '', fcfa(p.totalRecu ?? 0), p.objectif > 0 ? `${progression(p)} %` : '', p.description || '']),
+          alignDroite: [3, 4, 5],
+        })} />
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 className="titre-carte" style={{ margin: 0 }}>
           {brancheId ? "Projets de l'église locale" : 'Projets du BEN'}
@@ -183,6 +196,7 @@ function FormulaireCreerProjet({ brancheId, uid, onRetour }) {
 // Détail d'un projet — 4 onglets
 // ─────────────────────────────────────────────────────────────────────────────
 function DetailProjet({ projet, brancheId, uid, lectureSeule, onRetour }) {
+  const nomEgliseProjets = useNomEglise(brancheId)
   const [onglet, setOnglet] = useState('ponctuelles')
   const [contributions, setContributions] = useState([])
   const [membres, setMembres] = useState([])
@@ -316,6 +330,14 @@ function DetailProjet({ projet, brancheId, uid, lectureSeule, onRetour }) {
       {onglet === 'ponctuelles' && (
         <section className="carte">
           <h2 className="titre-carte">Contributions ponctuelles</h2>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <BoutonExport label="Exporter les contributions" onExport={() => exporterTableauPdf({
+              titre: `Contributions - ${projet.nom}`, sousTitre: `${ponctuelles.length} contribution(s) ponctuelle(s) · total ${fcfa(ponctuelles.reduce((a, c) => a + (c.montant ?? 0), 0))}`,
+              eglise: brancheId ? nomEgliseProjets : 'Bureau Exécutif National', colonnes: ['Contributeur', 'Montant'],
+              lignes: ponctuelles.map((c) => [c.nomMembre || '', fcfa(c.montant ?? 0)]), alignDroite: [1],
+              pied: ['Total', fcfa(ponctuelles.reduce((a, c) => a + (c.montant ?? 0), 0))],
+            })} />
+          </div>
           <ul className="liste">
             {ponctuelles.map((c) => (
               <li key={c.id} className="ligne-liste">

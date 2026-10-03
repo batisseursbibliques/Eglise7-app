@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import useNomEglise from '../lib/useNomEglise.js'
 import {
   collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp,
 } from 'firebase/firestore'
@@ -11,6 +14,7 @@ const TYPES_CULTE = [
 ]
 
 export default function DashboardCultes({ profil }) {
+  const nomEglise = useNomEglise(profil.brancheId)
   const { brancheId, uid } = profil
   const [cultes, setCultes] = useState([])
   const [culteSelectionne, setCulteSelectionne] = useState(null)
@@ -73,6 +77,16 @@ export default function DashboardCultes({ profil }) {
         </form>
 
         <h2 className="titre-carte" style={{ marginTop: '2rem' }}>Cultes</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter les cultes" onExport={() => exporterTableauPdf({
+            titre: 'Registre des cultes', sousTitre: `${cultes.length} culte(s) · ordre chronologique`, eglise: nomEglise, orientation: 'landscape',
+            colonnes: ['Date', 'Heure', 'Type', 'Thème', 'Prédicateur', 'Hommes', 'Femmes', 'Enfants', 'Total'],
+            lignes: [...cultes].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((c) => [
+              dateFr(c.date), c.heure || '', TYPES_CULTE.find((t) => t.valeur === c.type)?.label || c.type || '', c.theme || '', c.predicateur || '',
+              c.presence ? String(c.presence.hommes ?? '') : '', c.presence ? String(c.presence.femmes ?? '') : '', c.presence ? String(c.presence.enfants ?? '') : '', c.presence ? String(c.presence.total ?? '') : 'à venir']),
+            alignDroite: [5, 6, 7, 8],
+          })} />
+        </div>
         <ul className="liste">
           {cultes.map((c) => (
             <li

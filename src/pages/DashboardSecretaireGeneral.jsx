@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, collectionGroup } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
@@ -19,6 +21,8 @@ export default function DashboardSecretaireGeneral({ profil , page = 'membres'})
 
 function VueMembresNational() {
   const [membres, setMembres] = useState([])
+  const [branchesM, setBranchesM] = useState([])
+  useEffect(() => onSnapshot(collection(db, 'branches'), (snap) => setBranchesM(snap.docs.map((d) => ({ id: d.id, ...d.data() })))), [])
   useEffect(() => onSnapshot(collectionGroup(db, 'membres'), (snap) => (
     setMembres(snap.docs.map((d) => ({ id: d.id, brancheId: d.ref.parent.parent.id, ...d.data() })))
   )), [])
@@ -44,6 +48,14 @@ function VueMembresNational() {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Liste complète</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter la liste des membres" onExport={() => {
+            const nomB = (id) => branchesM.find((b) => b.id === id)?.nom || id
+            const lignes = membres.map((m) => [nomB(m.brancheId), `${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim(), m.telephone || '', (m.statut || '').replace('_', ' ')])
+              .sort((a, b) => a[0].localeCompare(b[0], 'fr') || a[1].localeCompare(b[1], 'fr'))
+            return exporterTableauPdf({ titre: 'Registre national des membres', sousTitre: `${membres.length} membre(s) · classés par église`, eglise: 'Bureau Exécutif National', colonnes: ['Église', 'Nom et prénom', 'Téléphone', 'Statut'], lignes })
+          }} />
+        </div>
         <ul className="liste">
           {membres.map((m) => (
             <li key={m.id} className="ligne-liste">
@@ -89,6 +101,13 @@ function PVNational({ uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">PV du BEN ({pvs.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter les PV du BEN" onExport={() => exporterTableauPdf({
+            titre: 'Registre des procès-verbaux du BEN', sousTitre: `${pvs.length} procès-verbal(aux) · ordre chronologique`, eglise: 'Bureau Exécutif National',
+            colonnes: ['Date', 'Objet', 'Contenu'],
+            lignes: [...pvs].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((p) => [dateFr(p.date), p.objet || '', p.contenu || '']),
+          })} />
+        </div>
         <ul className="liste">
           {pvs.map((p) => (
             <li key={p.id} className="ligne-liste-verticale">
@@ -139,6 +158,13 @@ function CourrierNational({ uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Registre ({courriers.length})</h2>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter le registre du courrier" onExport={() => exporterTableauPdf({
+            titre: 'Registre du courrier du BEN', sousTitre: `${courriers.length} courrier(s) · ordre chronologique`, eglise: 'Bureau Exécutif National',
+            colonnes: ['Date', 'Sens', 'Expéditeur / destinataire', 'Objet'],
+            lignes: [...courriers].sort((a, b) => String(a.date).localeCompare(String(b.date))).map((c) => [dateFr(c.date), c.sens === 'entrant' ? 'Entrant' : 'Sortant', c.expediteur || '', c.objet || '']),
+          })} />
+        </div>
         <ul className="liste">
           {courriers.map((c) => (
             <li key={c.id} className="ligne-liste">
@@ -173,6 +199,15 @@ function RapportsPVBranches() {
   return (
     <section className="carte">
       <h2 className="titre-carte">Procès-verbaux de toutes les églises locales</h2>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <BoutonExport label="Exporter les PV des églises" onExport={() => exporterTableauPdf({
+          titre: 'Procès-verbaux des églises locales', sousTitre: `${pvs.length} procès-verbal(aux) · classés par église puis par date`, eglise: 'Bureau Exécutif National', orientation: 'landscape',
+          colonnes: ['Église', 'Date', 'Objet', 'Contenu'],
+          lignes: pvs.map((p) => [branches.find((b) => b.id === p.brancheId)?.nom || p.brancheId, p.date || '', p.objet || '', p.contenu || ''])
+            .sort((a, b) => a[0].localeCompare(b[0], 'fr') || String(a[1]).localeCompare(String(b[1])))
+            .map((l) => [l[0], dateFr(l[1]), l[2], l[3]]),
+        })} />
+      </div>
       <ul className="liste">
         {pvs.map((p) => {
           const branche = branches.find((b) => b.id === p.brancheId)

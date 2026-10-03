@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import BoutonExport from '../components/BoutonExport.jsx'
+import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import { collection, onSnapshot, query, where, collectionGroup, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -61,6 +63,16 @@ function GestionVirements({ uid }) {
 
   const totalRecu = virementsValides.reduce((s, v) => s + v.montant, 0)
   const nomBranche = (id) => branches.find((b) => b.id === id)?.nom ?? id
+  const exporterRegistreReversements = () => {
+    const tous = [...virementsDeclares.map((v) => ({ ...v, st: 'En attente' })), ...virementsValides.map((v) => ({ ...v, st: 'Validé' }))]
+      .sort((a, b) => horodatage(a.date) - horodatage(b.date))
+    return exporterTableauPdf({
+      titre: 'Registre des reversements', sousTitre: `${tous.length} reversement(s) · ordre chronologique · total validé ${fcfa(totalRecu)}`, eglise: 'Trésorerie générale',
+      colonnes: ['Date', 'Église', 'Référence', 'Montant', 'Statut'],
+      lignes: tous.map((v) => [dateFr(v.date), nomBranche(v.brancheId), v.reference || '', fcfa(v.montant), v.st]),
+      alignDroite: [3], pied: ['', '', 'Total validé', fcfa(totalRecu), ''],
+    })
+  }
 
   return (
     <div className="grille-deux">
@@ -80,6 +92,7 @@ function GestionVirements({ uid }) {
       </section>
       <section className="carte">
         <h2 className="titre-carte">Total reçu et validé</h2>
+        <div style={{ marginBottom: '0.75rem' }}><BoutonExport label="Exporter le registre des reversements" onExport={exporterRegistreReversements} /></div>
         <p className="grand-nombre">{totalRecu.toLocaleString('fr-FR')} FCFA</p>
         <p className="note">{virementsValides.length} virement(s) validé(s)</p>
         <ul className="liste" style={{ marginTop: '1rem' }}>
@@ -111,11 +124,25 @@ function ConsolidationFinanciere() {
     TYPES_MOUVEMENT.map(({ valeur }) => [valeur, mouvements.filter((m) => m.type === valeur).reduce((s, m) => s + m.montant, 0)])
   )
   const soldeTotal = mouvements.reduce((acc, m) => m.type === 'depense' ? acc - m.montant : acc + m.montant, 0)
+  const exporterConsolidation = () => {
+    const calc = (liste) => {
+      const e = liste.filter((m) => m.type !== 'depense').reduce((a, m) => a + m.montant, 0)
+      const s = liste.filter((m) => m.type === 'depense').reduce((a, m) => a + m.montant, 0)
+      return [e, s, e - s]
+    }
+    const lignes = branches.map((b) => [b.nom || b.id, ...calc(mouvements.filter((m) => m.brancheId === b.id)).map(fcfa)])
+    const [te, ts, tn] = calc(mouvements)
+    return exporterTableauPdf({
+      titre: 'Consolidation financière', sousTitre: 'Toutes les églises locales', eglise: 'Trésorerie générale',
+      colonnes: ['Église', 'Entrées', 'Sorties', 'Solde'], lignes, alignDroite: [1, 2, 3], pied: ['Total consolidé', fcfa(te), fcfa(ts), fcfa(tn)],
+    })
+  }
 
   return (
     <div className="grille-deux">
       <section className="carte">
         <h2 className="titre-carte">Consolidation (toutes branches)</h2>
+        <div style={{ marginBottom: '0.75rem' }}><BoutonExport label="Exporter la consolidation" onExport={exporterConsolidation} /></div>
         <ul className="liste">
           {TYPES_MOUVEMENT.map(({ valeur, label }) => (
             <li key={valeur} className="ligne-liste">
