@@ -131,27 +131,41 @@ function ComptesRendusRecus({ brancheId, departements }) {
     return () => fins.forEach((f) => f())
   }, [brancheId, departements.map((d) => d.id).join(',')])
 
-  const liste = departements
-    .flatMap((d) => (parDept[d.id] || []).map((c) => ({ ...c, dept: d.nom })))
-    .sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0))
-    .slice(0, 30)
+  const groupes = departements
+    .map((d) => ({ id: d.id, nom: d.nom, items: parDept[d.id] || [] }))
+    .filter((g) => g.items.length > 0)
+  const total = groupes.reduce((n, g) => n + g.items.length, 0)
+  const styleSummary = { cursor: 'pointer', fontWeight: 600, padding: '0.7rem 0', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
+  const fmt = (c) => (c.date?.toDate ? c.date.toDate().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
   return (
     <section className="carte" style={{ marginBottom: '1.5rem' }}>
-      <h2 className="titre-carte">Comptes-rendus reçus</h2>
-      {erreur && <p className="alerte">Impossible de charger certains comptes-rendus.</p>}
-      <ul className="liste">
-        {liste.map((c) => (
-          <li key={`${c.dept}-${c.id}`} className="ligne-liste-verticale">
-            <strong>{c.dept}</strong>
-            <span className="note" style={{ marginLeft: '0.5rem' }}>
-              {c.date?.toDate ? c.date.toDate().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
-            </span>
-            <p style={{ margin: '0.3rem 0 0', whiteSpace: 'pre-line' }}>{c.contenu}</p>
-          </li>
-        ))}
-        {liste.length === 0 && <p className="note">Aucun compte-rendu reçu pour l'instant.</p>}
-      </ul>
+      <details>
+        <summary style={{ ...styleSummary, padding: 0 }}>
+          <h2 className="titre-carte" style={{ margin: 0 }}>Comptes-rendus reçus ({total})</h2>
+          <span aria-hidden="true">▾</span>
+        </summary>
+        {erreur && <p className="alerte">Impossible de charger certains comptes-rendus.</p>}
+        {groupes.length === 0 && <p className="note" style={{ marginTop: '1rem' }}>Aucun compte-rendu reçu pour l'instant.</p>}
+        <div style={{ marginTop: '0.75rem' }}>
+          {groupes.map((g) => (
+            <details key={g.id} style={{ borderTop: '1px solid var(--ligne)' }}>
+              <summary style={styleSummary}>
+                <span>{g.nom} <span className="note">({g.items.length})</span></span>
+                <span aria-hidden="true">▾</span>
+              </summary>
+              <ul className="liste" style={{ paddingBottom: '0.5rem' }}>
+                {g.items.map((c) => (
+                  <li key={c.id} className="ligne-liste-verticale">
+                    <span className="note">{fmt(c)}</span>
+                    <p style={{ margin: '0.3rem 0 0', whiteSpace: 'pre-line' }}>{c.contenu}</p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+      </details>
     </section>
   )
 }
