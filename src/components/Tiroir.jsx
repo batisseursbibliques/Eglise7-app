@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 
 import BoutonInstaller from './BoutonInstaller.jsx'
+import StatutHorsLigne from './StatutHorsLigne.jsx'
 
 export default function Tiroir({ ouvert, onFermer, sections, pageActive, onNaviguer, nom, role, onDeconnexion, onChangerMdp }) {
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function Tiroir({ ouvert, onFermer, sections, pageActive, onNavig
         </div>
         {onDeconnexion && (
           <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.25)' }}>
+            <StatutHorsLigne />
             <BoutonInstaller />
             {onChangerMdp && (
               <button className="tiroir-lien" onClick={() => { onFermer(); onChangerMdp() }}>

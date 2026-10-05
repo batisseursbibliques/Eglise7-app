@@ -1,6 +1,8 @@
 // Enveloppe de « firebase/firestore » (voir vite.config.js).
 // Hors connexion, une écriture est déjà enregistrée sur l'appareil et visible à l'écran, mais sa promesse
 // n'aboutit qu'au retour du réseau. On rend la main aussitôt pour que les formulaires ne restent pas bloqués.
+// Sur une connexion qui répond trop lentement (plus de 6 s), on fait de même : un refus des règles de sécurité,
+// lui, arrive en moins de 6 s et reste signalé normalement.
 import {
   addDoc as addDocReel, setDoc as setDocReel, updateDoc as updateDocReel, deleteDoc as deleteDocReel,
 } from '@firebase/firestore'
@@ -9,9 +11,8 @@ export * from '@firebase/firestore'
 
 const horsLigne = () => typeof navigator !== 'undefined' && navigator.onLine === false
 const rapide = (p) => {
-  if (!horsLigne()) return p
   p.catch(() => {})
-  return Promise.race([p, new Promise((resolve) => setTimeout(() => resolve(undefined), 400))])
+  return Promise.race([p, new Promise((resolve) => setTimeout(() => resolve(undefined), horsLigne() ? 400 : 6000))])
 }
 
 export const addDoc = (...a) => rapide(addDocReel(...a))

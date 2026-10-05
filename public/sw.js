@@ -11,6 +11,7 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
       .then((c) => Promise.all(PRECACHE.map((u) => c.add(u).catch(() => {}))))
+      .then(() => caches.open(BIBLES).then((c) => c.match('/bibles/lsg.json').then((hit) => hit || c.add('/bibles/lsg.json'))).catch(() => {}))
       .then(() => self.skipWaiting()),
   )
 })

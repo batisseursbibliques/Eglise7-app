@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ChangerMotDePasse from './components/ChangerMotDePasse.jsx'
 import { RappelsRecus } from './pages/RappelsEquipe.jsx'
 import BandeauHorsLigne from './components/BandeauHorsLigne.jsx'
+import { preparerHorsLigne } from './lib/horsLigne.js'
 import { collection, onSnapshot, query as requete, where as ou } from 'firebase/firestore'
 import { db as baseDb } from './lib/firebase.js'
 import { LOGO_MIMC } from './assets/logo-mimc.js'
@@ -215,6 +216,14 @@ function Contenu() {
     if (profil?.role !== 'national') { setMere(null); return undefined }
     return onSnapshot(requete(collection(baseDb, 'branches'), ou('mere', '==', true)), (s) => setMere(s.docs[0] ? { id: s.docs[0].id, ...s.docs[0].data() } : null), () => setMere(null))
   }, [profil?.role])
+  // Préparation hors ligne : à l'ouverture en ligne, puis au retour du réseau
+  useEffect(() => {
+    if (!profil?.uid) return undefined
+    const lancer = () => preparerHorsLigne(profil)
+    const t = setTimeout(lancer, 2500)
+    window.addEventListener('online', lancer)
+    return () => { clearTimeout(t); window.removeEventListener('online', lancer) }
+  }, [profil?.uid])
   // Mot de passe temporaire : on invite la personne à le changer dès la première connexion
   useEffect(() => { if (profil?.mdpTemporaire) setMdpOuvert(true) }, [profil])
 
