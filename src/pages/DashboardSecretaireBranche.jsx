@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import BoutonExport from '../components/BoutonExport.jsx'
 import useNomEglise from '../lib/useNomEglise.js'
-import { exporterTableauPdf, dateFr, horodatage } from '../lib/exportPdf.js'
+import { exporterTableauPdf, exporterCartesMembresPdf, dateFr, horodatage } from '../lib/exportPdf.js'
+import AvatarMembre from '../components/AvatarMembre.jsx'
+import { envoyerPhoto, MESSAGE_PHOTO } from '../lib/photos.js'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, doc, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
 
@@ -40,6 +42,9 @@ function GestionMembres({ brancheId, uid }) {
   const [prenom, setPrenom] = useState('')
   const [statut, setStatut] = useState('nouveau')
   const [telephone, setTelephone] = useState('')
+  const [photo, setPhoto] = useState(null)
+  const [msgPhoto, setMsgPhoto] = useState('')
+  const [envoi, setEnvoi] = useState(false)
 
   useEffect(() => {
     const q = query(collection(db, 'branches', brancheId, 'membres'), orderBy('nom'))
@@ -49,10 +54,15 @@ function GestionMembres({ brancheId, uid }) {
   async function ajouter(e) {
     e.preventDefault()
     if (!nom) return
+    setEnvoi(true); setMsgPhoto('')
+    let photoUrl = null
+    if (photo) {
+      try { photoUrl = await envoyerPhoto(photo) } catch { setMsgPhoto(`Membre enregistré. ${MESSAGE_PHOTO}`) }
+    }
     await addDoc(collection(db, 'branches', brancheId, 'membres'), {
-      nom, prenom, statut, telephone, dateAdhesion: serverTimestamp(), saisieParUid: uid,
+      nom, prenom, statut, telephone, dateAdhesion: serverTimestamp(), saisieParUid: uid, ...(photoUrl ? { photoUrl } : {}),
     })
-    setNom(''); setPrenom(''); setTelephone(''); setStatut('nouveau')
+    setNom(''); setPrenom(''); setTelephone(''); setStatut('nouveau'); setPhoto(null); setEnvoi(false)
   }
 
   return (
@@ -68,7 +78,10 @@ function GestionMembres({ brancheId, uid }) {
             <option value="regulier">Régulier</option>
             <option value="membre_officiel">Membre officiel</option>
           </select>
-          <button type="submit" className="bouton-principal">Enregistrer</button>
+          <label className="note" htmlFor="photo-membre">Photo d'identité (facultatif)</label>
+          <input id="photo-membre" type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+          <button type="submit" className="bouton-principal" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer'}</button>
+          {msgPhoto && <p className="alerte">{msgPhoto}</p>}
         </form>
       </section>
       <section className="carte">
@@ -80,10 +93,13 @@ function GestionMembres({ brancheId, uid }) {
             lignes: membres.map((m) => [`${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim(), m.telephone || '', (m.statut || '').replace('_', ' ')]),
           })} />
         </div>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <BoutonExport label="Exporter le registre avec photos" onExport={() => exporterCartesMembresPdf({ sousTitre: `${membres.length} membre(s) · ordre alphabétique`, eglise: nomEglise, membres })} />
+        </div>
         <ul className="liste">
           {membres.map((m) => (
             <li key={m.id} className="ligne-liste">
-              <span>{m.prenom} {m.nom}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><AvatarMembre membre={m} chemin={['branches', brancheId, 'membres', m.id]} /> {m.prenom} {m.nom}</span>
               <span>{m.telephone || '—'}</span>
               <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
             </li>

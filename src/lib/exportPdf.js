@@ -108,3 +108,70 @@ export async function exporterDocumentPdf({ titre, sousTitre, eglise, blocs }) {
   entetePied(doc, { titre, sousTitre, eglise }, maintenantFr())
   doc.save(`${nomFichierSur(titre)}-${new Date().toISOString().slice(0, 10)}.pdf`)
 }
+
+// ── Registre des membres avec photos : une fiche par membre, deux colonnes ───────────────────────
+const LIBELLE_STATUT = { nouveau: 'Nouveau', regulier: 'Régulier', membre_officiel: 'Membre officiel', parti: 'Parti' }
+
+// Photo découpée en rond (PNG), ou null si elle ne peut pas être chargée
+function photoRonde(url, px = 200) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas')
+        c.width = px; c.height = px
+        const g = c.getContext('2d')
+        g.beginPath(); g.arc(px / 2, px / 2, px / 2, 0, Math.PI * 2); g.closePath(); g.clip()
+        const cote = Math.min(img.width, img.height)
+        g.drawImage(img, (img.width - cote) / 2, (img.height - cote) / 2, cote, cote, 0, 0, px, px)
+        resolve(c.toDataURL('image/png'))
+      } catch { resolve(null) }
+    }
+    img.onerror = () => resolve(null)
+    img.src = url
+  })
+}
+
+export async function exporterCartesMembresPdf({ titre = 'Registre des membres', sousTitre, eglise, membres }) {
+  const { jsPDF } = await charger()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const H = doc.internal.pageSize.getHeight()
+  const LC = 88, ECART = 6, HC = 31
+  const photos = []
+  for (let i = 0; i < membres.length; i += 6) {
+    photos.push(...(await Promise.all(membres.slice(i, i + 6).map((m) => (m.photoUrl ? photoRonde(m.photoUrl) : null)))))
+  }
+  let y = 44
+  membres.forEach((m, i) => {
+    const col = i % 2
+    if (col === 0 && i > 0) y += HC + 3
+    if (y + HC > H - 18) { doc.addPage(); y = 44 }
+    const x = MARGE + col * (LC + ECART)
+    doc.setDrawColor(220); doc.setLineWidth(0.3); doc.roundedRect(x, y, LC, HC, 2, 2)
+    const nom = `${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim()
+    if (photos[i]) {
+      doc.addImage(photos[i], 'PNG', x + 3, y + 5.5, 20, 20)
+    } else {
+      doc.setFillColor(...BORDEAUX); doc.circle(x + 13, y + 15.5, 10, 'F')
+      doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12)
+      doc.text(net(`${(m.prenom || '')[0] || ''}${(m.nom || '')[0] || ''}`.toUpperCase() || '?'), x + 13, y + 17.5, { align: 'center' })
+    }
+    const tx = x + 27, larg = LC - 30
+    doc.setTextColor(30); doc.setFont('helvetica', 'bold'); doc.setFontSize(9)
+    const lignesNom = doc.splitTextToSize(net(`N° ${i + 1} - ${nom}`), larg).slice(0, 2)
+    doc.text(lignesNom, tx, y + 6)
+    const decal = (lignesNom.length - 1) * 3.6
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(70)
+    const lignes = [
+      m.telephone ? `Tél : ${m.telephone}` : 'Tél : -',
+      `Statut : ${LIBELLE_STATUT[m.statut] || m.statut || '-'}`,
+      m.dateAdhesion ? `Adhésion : ${dateFr(m.dateAdhesion)}` : null,
+      m.eglise ? `Église : ${m.eglise}` : null,
+    ].filter(Boolean)
+    lignes.forEach((l, k) => doc.text(doc.splitTextToSize(net(l), larg)[0], tx, y + 13 + decal + k * 4.2))
+  })
+  if (!membres.length) { doc.setFontSize(10); doc.setTextColor(120); doc.text('Aucun membre à exporter.', MARGE, 48) }
+  entetePied(doc, { titre, sousTitre, eglise }, maintenantFr())
+  doc.save(`${nomFichierSur(titre)}-${new Date().toISOString().slice(0, 10)}.pdf`)
+}

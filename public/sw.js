@@ -6,6 +6,7 @@ const PRECACHE = __PRECACHE__
 const CACHE = `mimc-${VERSION}`
 const BIBLES = 'mimc-bibles-v1'
 const POLICES = 'mimc-polices-v1'
+const PHOTOS = 'mimc-photos-v1'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -19,7 +20,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((cles) => Promise.all(cles.filter((c) => c !== CACHE && c !== BIBLES && c !== POLICES).map((c) => caches.delete(c))))
+      .then((cles) => Promise.all(cles.filter((c) => c !== CACHE && c !== BIBLES && c !== POLICES && c !== PHOTOS).map((c) => caches.delete(c))))
       .then(() => self.clients.claim()),
   )
 })
@@ -59,6 +60,8 @@ self.addEventListener('fetch', (e) => {
     )
     return
   }
+  // Photos des membres (Cloudinary) : gardées après la première vue, pour l'affichage et le PDF hors ligne
+  if (url.hostname === 'res.cloudinary.com') { e.respondWith(cacheDabord(req, PHOTOS)); return }
   if (url.origin !== self.location.origin) return // Firebase et le reste : réseau direct
 
   if (url.pathname.startsWith('/bibles/')) { e.respondWith(cacheDabord(req, BIBLES)); return }

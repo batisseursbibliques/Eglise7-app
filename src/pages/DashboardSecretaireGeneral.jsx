@@ -1,6 +1,8 @@
 import { AccueilSG } from './AccueilRoles.jsx'
 import React, { useEffect, useState } from 'react'
 import BoutonExport from '../components/BoutonExport.jsx'
+import AvatarMembre from '../components/AvatarMembre.jsx'
+import { exporterCartesMembresPdf } from '../lib/exportPdf.js'
 import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, collectionGroup } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
@@ -57,11 +59,12 @@ function VueMembresNational() {
               .sort((a, b) => a[0].localeCompare(b[0], 'fr') || a[1].localeCompare(b[1], 'fr'))
             return exporterTableauPdf({ titre: 'Registre national des membres', sousTitre: `${membres.length} membre(s) · classés par église`, eglise: 'Bureau Exécutif National', colonnes: ['Église', 'Nom et prénom', 'Téléphone', 'Statut'], lignes })
           }} />
+          <BoutonExport label="Exporter avec photos" onExport={() => exporterCartesMembresPdf({ titre: 'Registre national des membres', sousTitre: `${membres.length} membre(s) · classés par église`, eglise: 'Bureau Exécutif National', membres: [...membres].map((m) => ({ ...m, eglise: branchesM.find((b) => b.id === m.brancheId)?.nom || '' })).sort((a, b) => a.eglise.localeCompare(b.eglise, 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr')) })} />
         </div>
         <ul className="liste">
           {membres.map((m) => (
             <li key={m.id} className="ligne-liste">
-              <span>{m.prenom} {m.nom}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><AvatarMembre membre={m} taille={34} /> {m.prenom} {m.nom}</span>
               <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
             </li>
           ))}

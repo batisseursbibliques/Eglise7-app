@@ -34,6 +34,8 @@ async function chargerEglise(id, profil) {
   const taches = BRANCHE.map((nom) => () => lire(collection(db, 'branches', id, nom)))
   const [membres, projets, departements] = [await lire(collection(db, 'branches', id, 'membres')), await lire(collection(db, 'branches', id, 'projets')), await lire(collection(db, 'branches', id, 'departements'))]
   await parGroupes(taches)
+  // Photos des membres : on les charge une fois pour qu'elles restent visibles hors ligne
+  await parGroupes(membres.map((m) => m.data().photoUrl).filter(Boolean).map((u) => () => fetch(u, { mode: 'cors' }).then((r) => r.blob()).catch(() => null)), 6)
   await parGroupes([
     ...departements.flatMap((d) => DEPARTEMENT.map((nom) => () => lire(collection(db, 'branches', id, 'departements', d.id, nom)))),
     ...projets.map((p) => () => lire(collection(db, 'branches', id, 'projets', p.id, 'contributions'))),

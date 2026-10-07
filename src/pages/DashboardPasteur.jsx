@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import BoutonExport from '../components/BoutonExport.jsx'
 import useNomEglise from '../lib/useNomEglise.js'
-import { exporterTableauPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import { exporterTableauPdf, exporterCartesMembresPdf, dateFr, fcfa, horodatage } from '../lib/exportPdf.js'
+import AvatarMembre from '../components/AvatarMembre.jsx'
 import {
   collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp,
 } from 'firebase/firestore'
@@ -361,6 +362,9 @@ function LectureSecretariat({ brancheId }) {
             lignes: membres.map((m) => [`${(m.nom || '').toUpperCase()} ${m.prenom || ''}`.trim(), m.telephone || '', (m.statut || '').replace('_', ' ')]),
           })} />
         )}
+        {onglet === 'membres' && (
+          <BoutonExport label="Exporter avec photos" onExport={() => exporterCartesMembresPdf({ sousTitre: `${membres.length} membre(s) · ordre alphabétique`, eglise: nomEglise, membres })} />
+        )}
         {onglet === 'pv' && (
           <BoutonExport label="Exporter les procès-verbaux" onExport={() => exporterTableauPdf({
             titre: 'Registre des procès-verbaux', sousTitre: `${pvs.length} procès-verbal(aux) · ordre chronologique`, eglise: nomEglise,
@@ -383,6 +387,7 @@ function LectureSecretariat({ brancheId }) {
           <ul className="liste">
             {membres.map((m) => (
               <li key={m.id} className="ligne-liste">
+                <AvatarMembre membre={m} taille={34} />
                 <span>{m.prenom} {m.nom}</span>
                 <span>{m.telephone || '—'}</span>
                 <span className="etiquette">{m.statut?.replace('_', ' ')}</span>
